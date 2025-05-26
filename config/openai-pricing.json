@@ -1,0 +1,244 @@
+{
+	"lastUpdated": "2025-05-22",
+	"source": "https://openai.com/pricing",
+	"note": "Prices are per 1,000 tokens in USD. Original OpenAI pricing is per 1M tokens, converted here by dividing by 1000.",
+	"models": {
+		"gpt-4.1": {
+			"prompt": 0.002,
+			"completion": 0.008
+		},
+		"gpt-4.1-2025-04-14": {
+			"prompt": 0.002,
+			"completion": 0.008
+		},
+		"gpt-4.1-mini": {
+			"prompt": 0.0004,
+			"completion": 0.0016
+		},
+		"gpt-4.1-mini-2025-04-14": {
+			"prompt": 0.0004,
+			"completion": 0.0016
+		},
+		"gpt-4.1-nano": {
+			"prompt": 0.0001,
+			"completion": 0.0004
+		},
+		"gpt-4.1-nano-2025-04-14": {
+			"prompt": 0.0001,
+			"completion": 0.0004
+		},
+		"gpt-4.5-preview": {
+			"prompt": 0.075,
+			"completion": 0.15
+		},
+		"gpt-4.5-preview-2025-02-27": {
+			"prompt": 0.075,
+			"completion": 0.15
+		},
+		"gpt-4o": {
+			"prompt": 0.005,
+			"completion": 0.015
+		},
+		"gpt-4o-2024-08-06": {
+			"prompt": 0.0025,
+			"completion": 0.01
+		},
+		"gpt-4o-audio-preview": {
+			"prompt": 0.0025,
+			"completion": 0.01
+		},
+		"gpt-4o-audio-preview-2024-12-17": {
+			"prompt": 0.0025,
+			"completion": 0.01
+		},
+		"gpt-4o-realtime-preview": {
+			"prompt": 0.005,
+			"completion": 0.02
+		},
+		"gpt-4o-realtime-preview-2024-12-17": {
+			"prompt": 0.005,
+			"completion": 0.02
+		},
+		"gpt-4o-mini": {
+			"prompt": 0.00015,
+			"completion": 0.0006
+		},
+		"gpt-4o-mini-2024-07-18": {
+			"prompt": 0.00015,
+			"completion": 0.0006
+		},
+		"gpt-4o-mini-audio-preview": {
+			"prompt": 0.00015,
+			"completion": 0.0006
+		},
+		"gpt-4o-mini-audio-preview-2024-12-17": {
+			"prompt": 0.00015,
+			"completion": 0.0006
+		},
+		"gpt-4o-mini-realtime-preview": {
+			"prompt": 0.0006,
+			"completion": 0.0024
+		},
+		"gpt-4o-mini-realtime-preview-2024-12-17": {
+			"prompt": 0.0006,
+			"completion": 0.0024
+		},
+		"gpt-4o-search-preview": {
+			"prompt": 0.0025,
+			"completion": 0.01
+		},
+		"gpt-4o-search-preview-2025-03-11": {
+			"prompt": 0.0025,
+			"completion": 0.01
+		},
+		"gpt-4o-mini-search-preview": {
+			"prompt": 0.00015,
+			"completion": 0.0006
+		},
+		"gpt-4o-mini-search-preview-2025-03-11": {
+			"prompt": 0.00015,
+			"completion": 0.0006
+		},
+		"o1": {
+			"prompt": 0.015,
+			"completion": 0.06
+		},
+		"o1-2024-12-17": {
+			"prompt": 0.015,
+			"completion": 0.06
+		},
+		"o1-pro": {
+			"prompt": 0.15,
+			"completion": 0.6
+		},
+		"o1-pro-2025-03-19": {
+			"prompt": 0.15,
+			"completion": 0.6
+		},
+		"o3": {
+			"prompt": 0.01,
+			"completion": 0.04
+		},
+		"o3-2025-04-16": {
+			"prompt": 0.01,
+			"completion": 0.04
+		},
+		"o4-mini": {
+			"prompt": 0.0011,
+			"completion": 0.0044
+		},
+		"o4-mini-2025-04-16": {
+			"prompt": 0.0011,
+			"completion": 0.0044
+		},
+		"o3-mini": {
+			"prompt": 0.0011,
+			"completion": 0.0044
+		},
+		"o3-mini-2025-01-31": {
+			"prompt": 0.0011,
+			"completion": 0.0044
+		},
+		"o1-mini": {
+			"prompt": 0.0011,
+			"completion": 0.0044
+		},
+		"o1-mini-2024-09-12": {
+			"prompt": 0.0011,
+			"completion": 0.0044
+		},
+		"codex-mini-latest": {
+			"prompt": 0.0015,
+			"completion": 0.006
+		},
+		"computer-use-preview": {
+			"prompt": 0.003,
+			"completion": 0.012
+		},
+		"computer-use-preview-2025-03-11": {
+			"prompt": 0.003,
+			"completion": 0.012
+		},
+		"gpt-image-1": {
+			"prompt": 0.005,
+			"completion": 0
+		},
+		"chatgpt-4o-latest": {
+			"prompt": 0.005,
+			"completion": 0.015
+		},
+		"gpt-4-turbo": {
+			"prompt": 0.01,
+			"completion": 0.03
+		},
+		"gpt-4-turbo-2024-04-09": {
+			"prompt": 0.01,
+			"completion": 0.03
+		},
+		"gpt-4-0125-preview": {
+			"prompt": 0.01,
+			"completion": 0.03
+		},
+		"gpt-4-1106-preview": {
+			"prompt": 0.01,
+			"completion": 0.03
+		},
+		"gpt-4-1106-vision-preview": {
+			"prompt": 0.01,
+			"completion": 0.03
+		},
+		"gpt-4-0613": {
+			"prompt": 0.03,
+			"completion": 0.06
+		},
+		"gpt-4-0314": {
+			"prompt": 0.03,
+			"completion": 0.06
+		},
+		"gpt-4-32k": {
+			"prompt": 0.06,
+			"completion": 0.12
+		},
+		"gpt-3.5-turbo": {
+			"prompt": 0.0005,
+			"completion": 0.0015
+		},
+		"gpt-3.5-turbo-0125": {
+			"prompt": 0.0005,
+			"completion": 0.0015
+		},
+		"gpt-3.5-turbo-1106": {
+			"prompt": 0.001,
+			"completion": 0.002
+		},
+		"gpt-3.5-turbo-0613": {
+			"prompt": 0.0015,
+			"completion": 0.002
+		},
+		"gpt-3.5-0301": {
+			"prompt": 0.0015,
+			"completion": 0.002
+		},
+		"gpt-3.5-turbo-instruct": {
+			"prompt": 0.0015,
+			"completion": 0.002
+		},
+		"gpt-3.5-turbo-16k-0613": {
+			"prompt": 0.003,
+			"completion": 0.004
+		},
+		"davinci-002": {
+			"prompt": 0.002,
+			"completion": 0.002
+		},
+		"babbage-002": {
+			"prompt": 0.0004,
+			"completion": 0.0004
+		}
+	},
+	"fallback": {
+		"prompt": 0.00015,
+		"completion": 0.0006,
+		"note": "Used for unknown models, based on gpt-4o-mini (default model) pricing"
+	}
+}

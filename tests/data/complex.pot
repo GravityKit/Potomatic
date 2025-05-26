@@ -1,0 +1,102 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-01-01 12:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+#: src/app.js:10
+msgid "Dashboard"
+msgstr ""
+
+#: src/app.js:15
+msgid "Settings"
+msgstr ""
+
+#: src/app.js:20
+#. Translators: This appears in the navigation menu
+msgid "User Profile"
+msgstr ""
+
+#: src/app.js:25
+msgid "Log Out"
+msgstr ""
+
+#: src/forms.js:10
+msgid "First Name"
+msgstr ""
+
+#: src/forms.js:15
+msgid "Last Name"
+msgstr ""
+
+#: src/forms.js:20
+msgid "Email Address"
+msgstr ""
+
+#: src/forms.js:25
+#. Translators: Placeholder text for password field
+msgid "Enter your password"
+msgstr ""
+
+#: src/messages.js:10
+msgid "Success! Your changes have been saved."
+msgstr ""
+
+#: src/messages.js:15
+msgid "Error: Please check your input and try again."
+msgstr ""
+
+#: src/messages.js:20
+msgid "Warning: This action cannot be undone."
+msgstr ""
+
+#: src/items.js:10
+msgid "item"
+msgid_plural "items"
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/items.js:15
+#, c-format
+msgid "You have %d new message"
+msgid_plural "You have %d new messages"
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/dates.js:10
+msgid "Today"
+msgstr ""
+
+#: src/dates.js:15
+msgid "Yesterday"
+msgstr ""
+
+#: src/dates.js:20
+msgid "Last week"
+msgstr ""
+
+#: src/api.js:10
+msgid "Loading..."
+msgstr ""
+
+#: src/api.js:15
+msgid "No data available"
+msgstr ""
+
+#: src/api.js:20
+msgid "Connection failed. Please try again."
+msgstr "" 

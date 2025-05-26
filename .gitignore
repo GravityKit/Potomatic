@@ -1,0 +1,12 @@
+*.code-workspace
+.DS_Store
+.env
+*.po
+*.pot
+.cursor/
+.history/
+debug/
+node_modules/
+tests/coverage/
+!tests/data/*.po
+!tests/data/*.pot

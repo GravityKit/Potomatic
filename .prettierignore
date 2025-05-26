@@ -1,0 +1,6 @@
+node_modules
+.history
+**/*.html
+tests/coverage
+*.po
+*.pot 

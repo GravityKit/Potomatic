@@ -1,0 +1,738 @@
+#!/usr/bin/env node
+
+import 'dotenv/config';
+import { OpenAI } from 'openai';
+import chalk from 'chalk';
+import fs from 'fs';
+import path from 'path';
+import { getPromptTokenCount } from '../src/utils/promptLoader.js';
+import { getLanguageName } from '../src/utils/languageMapping.js';
+import { buildXmlPrompt, parseXmlResponse, buildDictionaryResponse } from '../src/utils/xmlTranslation.js';
+import { getPluralForms, extractPluralCount } from '../src/utils/poFileUtils.js';
+import { formatNumber } from '../src/utils/costCalculations.js';
+import { loadDictionary, findDictionaryMatches } from '../src/utils/dictionaryUtils.js';
+
+// A/B Test Configuration
+const TEST_CONFIG = {
+	model_a: 'gpt-4o-mini',
+	model_b: 'gpt-3.5-turbo',
+	model_a_temperature: 0.7,
+	model_b_temperature: 0.1,
+	target_language: 'ru',
+};
+
+// Test data: 27 strings from a production .pot file that include variety: simple, complex, placeholders, format specifiers, long strings, contexts, plural forms, and dictionary terms
+const TEST_STRINGS = [
+	// Simple strings
+	{ t: 'Save', c: 'Button label' },
+	{ t: 'Email' },
+	{ t: 'Close' },
+
+	// Strings with square bracket placeholders
+	{ t: '[plugin] requires [requirement] [version] or newer to be installed and activated.', c: 'Translators: Do not translate the placeholders [plugin], [requirement], and [version].' },
+	{ t: 'Earn money when people clicking your links become GravityKit customers. [link]Register as an affiliate[/link]!', c: 'Placeholders inside [] are not to be translated.' },
+	{ t: 'As such, the settings below will not apply to GravityView pages and you will have to continue using the [link]old settings[/link] until an updated version of the plugin is available.', c: 'Placeholders inside [] are not to be translated.' },
+
+	// Strings with format specifiers
+	{ t: '%1$d of %2$d items shown.', c: 'translators: %1$d: number of items shown, %2$d: total number of items' },
+	{ t: '%1$s (ID #%2$s)', c: 'Lookup field label' },
+	{ t: 'Select the field from the source form that contains the values you want to look up. Supported field types include: %s.', c: 'translators: %s is replaced with a list of supported field types of comma-separated values.' },
+	{ t: 'You can only select %d item', c: 'translators: %d: maximum number of items' },
+
+	// Dictionary test strings (these should use dictionary translations)
+	{ t: 'Product by GravityKit' },
+	{ t: 'Login' },
+
+	// Mixed placeholders
+	{ t: 'Please enter [min_search_length] or more characters', c: 'translators: %d: minimum number of characters' },
+	{ t: 'Warning: The selected source has [total] results. Only the first [maximum] results will be available for selection.' },
+
+	// Plural forms - these will test the plural forms functionality
+	{ t: 'Found %d result', p: 'Found %d results', c: 'translators: %d: number of search results found' },
+	{ t: 'You have %d unread message', p: 'You have %d unread messages', c: 'translators: %d: number of unread messages' },
+	{ t: 'Delete %d item', p: 'Delete %d items', c: 'translators: %d: number of items to delete' },
+	{ t: '%d entry was imported', p: '%d entries were imported', c: 'translators: %d: number of imported entries' },
+	{ t: 'There is %d error in your form', p: 'There are %d errors in your form', c: 'translators: %d: number of form validation errors' },
+
+	// Long complex strings
+	{ t: 'No-conflict mode prevents extraneous scripts and styles from being printed on GravityKit admin pages, reducing conflicts with other plugins and themes.' },
+	{ t: 'A dynamic field with choices pulled from connected data sources.' },
+	{ t: 'The Support Port provides quick access to how-to articles and tutorials. For administrators, it also makes it easy to contact support.' },
+	{ t: 'You will have early access to the latest GravityKit products. There may be bugs! If you encounter an issue, report it to help make GravityKit products better!' },
+	{ t: 'When enabled, duplicate values will be removed from the results.' },
+
+	// Technical/domain-specific
+	{ t: 'Choose whether to store the text value or the ID of the selected item. For Gravity Forms entries, this will be the Entry ID. For WordPress Users, this will be the User ID.' },
+	{ t: 'Warning: Changing this setting after entries have been submitted may cause data inconsistency. Are you sure you want to proceed?' },
+	{ t: 'Adds a lookup field type to Gravity Forms that allows populating field choices from other form entries or WordPress users.' },
+];
+
+// Prompt configurations for A/B testing
+const PROMPT_CONFIGS = {
+	A: {
+		name: 'Prompt A',
+		color: chalk.green,
+		emoji: '🟢',
+		getPrompt: (targetLang) => buildPrompt(PROMPT_A, targetLang),
+		model: TEST_CONFIG.model_a,
+		temperature: TEST_CONFIG.model_a_temperature,
+	},
+	B: {
+		name: 'Prompt B',
+		color: chalk.blue,
+		emoji: '🔵',
+		getPrompt: (targetLang) => buildPrompt(PROMPT_B, targetLang),
+		model: TEST_CONFIG.model_b,
+		temperature: TEST_CONFIG.model_b_temperature,
+	},
+};
+
+// Prompt Templates (use {{SOURCE_LANGUAGE}}, {{TARGET_LANGUAGE}}, and {{TARGET_LANGUAGE_CODE}} placeholders)
+const PROMPT_A = `You are a professional translator specializing in software localization. Your task is to translate XML tags from {{SOURCE_LANGUAGE}} to {{TARGET_LANGUAGE}}, intended for use in app UIs, tooltips, dialogs, and help content.
+
+### Instructions
+
+1. **Translate each XML tag** and respond with the translated content in the same XML structure.
+2. **Preserve placeholders exactly**: Keep placeholders like [example], {value}, %s, %1$s unchanged. Do not translate, rename, delete, or substitute them.
+3. **Preserve formatting and whitespace**: Keep line breaks, HTML tags, special characters, and **trailing whitespace** unchanged. If the source has trailing spaces, the translation must also have trailing spaces.
+4. **Use context and comments**: The context and comment attributes provide helpful information for accurate translation.
+5. **Handle plural forms**: For tags with plural forms, provide exactly {{PLURAL_COUNT}} translations using the specified form tags (f0, f1, etc.).
+
+### Output Format
+
+For each input tag, respond with:
+
+<t i="N">translation for single form</t>
+
+For plural forms, respond with:
+
+<t i="N">
+<f0>translation for first form</f0>
+<f1>translation for second form</f1>
+<!-- ... up to f{{PLURAL_COUNT}}-1 for plural entries -->
+</t>
+
+Translate accurately while maintaining the technical and contextual meaning of the original text.`;
+
+const PROMPT_B = `You are a professional translator specializing in software localization. Your task is to translate XML tags from {{SOURCE_LANGUAGE}} to {{TARGET_LANGUAGE}} ({{TARGET_LANGUAGE_CODE}}), intended for use in app UIs, tooltips, dialogs, and help content.
+
+### Instructions
+
+1. **Translate each XML tag** and respond with the translated content in the same XML structure.
+2. **Do not alter placeholders or specifiers**:
+   - Keep placeholders like [example], {value}, %s, %1$s exactly as they are.
+   - Do not translate, rename, delete, or substitute placeholders.
+   - Reordering placeholders is allowed **only** if required by {{TARGET_LANGUAGE}} grammar.
+3. **Preserve formatting and whitespace**: Keep line breaks, HTML tags, special characters, and **trailing whitespace** unchanged. If the source has trailing spaces, the translation must also have trailing spaces.
+4. **Use clear, natural {{TARGET_LANGUAGE}} phrasing**, consistent with modern software UI:
+   - Avoid overly literal or stilted translations.
+   - Use context and comment attributes to guide phrasing, but do **not** modify placeholders based on them.
+   - Prioritize fluency and clarity over brevity.
+   - Sound like a real {{TARGET_LANGUAGE}} software interface — not a dictionary.
+5. **You may restructure sentences or clauses** to match native grammar and tone:
+   - Ensure the meaning and placeholders remain intact.
+   - Adjust punctuation, grammar, or word order as needed.
+6. **For RTL languages (Arabic, Hebrew, Farsi)**:
+   - You may flip punctuation (e.g., colons, parentheses) **only** to improve readability.
+   - Do not reorder or change placeholders.
+
+### Output Format
+
+For each input tag, respond with:
+
+<t i="N">translation for single form</t>
+
+For plural forms, respond with:
+
+<t i="N">
+<f0>translation for first form</f0>
+<f1>translation for second form</f1>
+<!-- ... up to f{{PLURAL_COUNT}}-1 for plural entries -->
+</t>
+
+Translate accurately while maintaining the technical and contextual meaning of the original text.`;
+
+let modelCosts;
+let fallbackPricing;
+
+try {
+	const currentDir = path.dirname(new URL(import.meta.url).pathname);
+	const configPath = path.resolve(currentDir, '../config/openai-pricing.json');
+	const costData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+
+	modelCosts = costData.models;
+	fallbackPricing = costData.fallback;
+} catch (error) {
+	console.error(chalk.red('❌ Failed to load openai-pricing.json, using hardcoded fallback pricing'));
+
+	modelCosts = {};
+
+	fallbackPricing = { prompt: 0.0005, completion: 0.0015 };
+}
+
+/**
+ * Gets pricing information for a specific AI model.
+ * Retrieves model-specific pricing or falls back to default pricing if not found.
+ *
+ * @since 1.0.0
+ *
+ * @param {string} modelName - The name of the AI model to get pricing for.
+ *
+ * @return {Object} Object containing inputCostPer1K and outputCostPer1K pricing.
+ */
+function getModelPricing(modelName) {
+	const pricing = modelCosts[modelName];
+
+	if (pricing) {
+		return {
+			inputCostPer1K: pricing.prompt,
+			outputCostPer1K: pricing.completion,
+		};
+	}
+
+	console.warn(chalk.yellow(`⚠️  Model '${modelName}' not found in openai-pricing.json, using fallback pricing`));
+
+	return {
+		inputCostPer1K: fallbackPricing.prompt,
+		outputCostPer1K: fallbackPricing.completion,
+	};
+}
+
+/**
+ * Formats price values properly without losing precision.
+ * Uses appropriate decimal places based on the magnitude of the value.
+ *
+ * @since 1.0.0
+ *
+ * @param {number} price - The price value to format.
+ *
+ * @return {string} Formatted price string with appropriate precision.
+ */
+function formatPrice(price) {
+	// For very small amounts (pricing rates), preserve precision.
+	if (price < 0.01) {
+		return price.toString().replace(/\.?0+$/, '');
+	}
+
+	// For larger amounts (savings), use reasonable rounding.
+	if (price < 1) {
+		return price.toFixed(4);
+	}
+
+	return price.toFixed(2);
+}
+
+/**
+ * Replaces language placeholders in prompt templates with actual values.
+ * Substitutes SOURCE_LANGUAGE, TARGET_LANGUAGE, and TARGET_LANGUAGE_CODE placeholders.
+ *
+ * @since 1.0.0
+ *
+ * @param {string} template - The prompt template containing placeholders.
+ * @param {string} targetLang - The target language code.
+ *
+ * @return {string} Prompt template with placeholders replaced by actual values.
+ */
+function buildPrompt(template, targetLang) {
+	const languageName = getLanguageName(targetLang) || targetLang;
+
+	return template
+		.replace(/\{\{SOURCE_LANGUAGE\}\}/g, 'English')
+		.replace(/\{\{TARGET_LANGUAGE\}\}/g, languageName)
+		.replace(/\{\{TARGET_LANGUAGE_CODE\}\}/g, targetLang);
+}
+
+/**
+ * Tests translation with a given prompt configuration approach.
+ * Processes test strings using the specified prompt strategy and model.
+ *
+ * @since 1.0.0
+ *
+ * @param {Object} openai - OpenAI client instance.
+ * @param {Array} testStrings - Array of test strings to translate.
+ * @param {Object} promptConfig - Configuration object for the prompt approach.
+ * @param {string} targetLang - Target language code for translation.
+ *
+ * @return {Promise<Object>} Translation result with success status and statistics.
+ */
+async function testTranslation(openai, testStrings, promptConfig, targetLang) {
+	console.log(promptConfig.color(`\n${promptConfig.emoji} Testing ${promptConfig.name} with ${promptConfig.model}...`));
+
+	// Build system prompt using the approach's method.
+	const systemPrompt = promptConfig.getPrompt(targetLang);
+
+	const systemTokens = getPromptTokenCount(systemPrompt, promptConfig.model);
+
+	console.log(chalk.gray(`System prompt tokens: ~${formatNumber(systemTokens)}`));
+
+	// Convert test strings to the format expected by buildXmlPrompt.
+	const batch = testStrings.map((item) => ({
+		msgid: item.t,
+		msgid_plural: item.p || null,
+		msgctxt: item.c || null,
+	}));
+
+	// Create a mock logger for functions that need it.
+	const mockLogger = {
+		warn: (msg) => console.warn(chalk.yellow(`⚠️  ${msg}`)),
+		debug: (msg) => console.log(chalk.gray(`🐛 ${msg}`)),
+		info: (msg) => console.log(chalk.blue(`ℹ️  ${msg}`)),
+	};
+
+	// Load dictionary and find matches (like potomatic does).
+	const currentDir = path.dirname(new URL(import.meta.url).pathname);
+	const dictionaryDir = currentDir; // Look for dictionary files in tools directory.
+	const dictionary = loadDictionary(dictionaryDir, targetLang, mockLogger);
+	const dictionaryMatches = findDictionaryMatches(batch, dictionary);
+
+	if (dictionaryMatches.length > 0) {
+		console.log(chalk.blue(`📖 Dictionary: Found ${dictionaryMatches.length} matching terms: ${dictionaryMatches.map((m) => m.source).join(', ')}`));
+	} else {
+		console.log(chalk.gray(`📖 No dictionary matches found for this batch`));
+	}
+
+	// Get plural count for the target language.
+	const pluralFormsString = getPluralForms(targetLang, mockLogger);
+	const pluralCount = extractPluralCount(pluralFormsString);
+
+	// Convert test strings to XML format with dictionary support.
+	const xmlResult = buildXmlPrompt(batch, targetLang, pluralCount, dictionaryMatches);
+	const xmlInput = xmlResult.xmlPrompt;
+
+	const userTokens = getPromptTokenCount(xmlInput, promptConfig.model);
+
+	console.log(chalk.gray(`User message tokens: ~${formatNumber(userTokens)}`));
+	console.log(chalk.gray(`Total input tokens: ~${formatNumber(systemTokens + userTokens)}`));
+
+	// Build messages array like potomatic does.
+	const messages = [
+		{ role: 'system', content: systemPrompt },
+		{ role: 'user', content: xmlInput },
+	];
+
+	// Add dictionary response and follow-up instruction if we have matches.
+	if (dictionaryMatches.length > 0) {
+		const dictionaryResponse = buildDictionaryResponse(dictionaryMatches);
+		
+		messages.push({ role: 'assistant', content: dictionaryResponse });
+
+		const exampleTerms = dictionaryMatches
+			.slice(0, 2)
+			.map((match) => `"${match.source}" MUST be translated as "${match.target}"`)
+			.join(' and ');
+
+		const instruction = `IMPORTANT: When translating the following strings, you MUST use the exact dictionary translations shown above for any terms that appear in the dictionary. For example, ${exampleTerms}. Use these exact translations, not alternatives. Now translate the actual strings:`;
+
+		messages.push({
+			role: 'user',
+			content: instruction,
+		});
+	}
+
+	const start = Date.now();
+
+	try {
+		const response = await openai.chat.completions.create({
+			model: promptConfig.model,
+			temperature: promptConfig.temperature,
+			messages: messages,
+		});
+
+		const elapsed = Date.now() - start;
+		const usage = response.usage;
+		const content = response.choices[0].message.content.trim();
+
+		console.log(chalk.green(`✅ Request completed in ${elapsed}ms`));
+		console.log(chalk.gray(`Actual tokens - Input: ${formatNumber(usage.prompt_tokens)}, Output: ${formatNumber(usage.completion_tokens)}, Total: ${formatNumber(usage.total_tokens)}`));
+
+		// Parse the translation using XML parser with dictionary count.
+		let translations;
+
+		try {
+			translations = parseXmlResponse(content, batch, pluralCount, mockLogger, xmlResult.dictionaryCount);
+			
+			// Post-process to handle pipe-separated plural forms that weren't parsed as XML.
+			translations = translations.map((item) => {
+				if (item.msgstr && item.msgstr.length === 1 && item.msgstr[0].includes('|')) {
+					// Split pipe-separated forms into array.
+					const forms = item.msgstr[0].split('|').map(form => form.trim());
+
+					return {
+						...item,
+						msgstr: forms
+					};
+				}
+
+				return item;
+			});
+			
+			console.log(chalk.gray(`✅ XML parsed successfully. Translations: ${translations.length}`));
+		} catch (e) {
+			// Show the actual response for debugging.
+			console.log(chalk.yellow(`⚠️  XML parsing failed. Raw response (first 500 chars):`));
+			console.log(chalk.gray(content.substring(0, 500) + (content.length > 500 ? '…' : '')));
+
+			throw new Error(`Could not parse response as XML: ${e.message}`);
+		}
+
+		return {
+			success: true,
+			translations,
+			usage,
+			elapsed,
+			promptConfig,
+			dictionaryMatches,
+		};
+	} catch (error) {
+		console.log(chalk.red(`❌ Error: ${error.message}`));
+		return { success: false, error: error.message, promptConfig };
+	}
+}
+
+/**
+ * Compares the quality of translations manually between two prompt approaches.
+ * Analyzes and displays differences between translation results for evaluation.
+ *
+ * @since 1.0.0
+ *
+ * @param {Array} testStrings - Array of original test strings.
+ * @param {Object} resultA - Translation result from first prompt approach.
+ * @param {Object} resultB - Translation result from second prompt approach.
+ */
+function compareTranslations(testStrings, resultA, resultB) {
+	console.log(chalk.yellow('\n📊 TRANSLATION COMPARISON\n'));
+
+	if (!resultA.success || !resultB.success) {
+		console.log(chalk.red('❌ Cannot compare - one or both tests failed'));
+
+		return;
+	}
+
+	// Show dictionary information.
+	if (resultA.dictionaryMatches?.length > 0 || resultB.dictionaryMatches?.length > 0) {
+		console.log(chalk.blue('📖 Dictionary Terms Used:'));
+
+		const allMatches = [...(resultA.dictionaryMatches || []), ...(resultB.dictionaryMatches || [])];
+		const uniqueMatches = allMatches.reduce((acc, match) => {
+			if (!acc.find(m => m.source === match.source)) {
+				acc.push(match);
+			}
+
+			return acc;
+		}, []);
+		
+		uniqueMatches.forEach(match => {
+			console.log(chalk.gray(`  "${match.source}" → "${match.target}"`));
+		});
+
+		console.log();
+	}
+
+	console.log(chalk.blue(`Original → ${resultA.promptConfig.name} (${resultA.promptConfig.model}) → ${resultB.promptConfig.name} (${resultB.promptConfig.model})`));
+	console.log(chalk.gray('='.repeat(120)));
+
+	for (let i = 0; i < testStrings.length; i++) {
+		const original = testStrings[i];
+		const resultObjA = resultA.translations[i];
+		const resultObjB = resultB.translations[i];
+
+		// Extract msgstr arrays from the XML response objects
+		const translationA = resultObjA?.msgstr || [];
+		const translationB = resultObjB?.msgstr || [];
+
+		console.log(chalk.white(`\n[${i + 1}] ${original.t}`));
+
+		if (original.p) {
+			console.log(chalk.gray(`    Plural: ${original.p}`));
+		}
+		if (original.c) {
+			console.log(chalk.gray(`    Context: ${original.c}`));
+		}
+
+		// Handle plural forms display
+		if (Array.isArray(translationA) && translationA.length > 1) {
+			console.log(resultA.promptConfig.color(`    ${resultA.promptConfig.name}: [${translationA.join(' | ')}]`));
+		} else {
+			const singleA = Array.isArray(translationA) ? translationA[0] : translationA;
+
+			console.log(resultA.promptConfig.color(`    ${resultA.promptConfig.name}: ${singleA}`));
+		}
+
+		if (Array.isArray(translationB) && translationB.length > 1) {
+			console.log(resultB.promptConfig.color(`    ${resultB.promptConfig.name}: [${translationB.join(' | ')}]`));
+		} else {
+			const singleB = Array.isArray(translationB) ? translationB[0] : translationB;
+
+			console.log(resultB.promptConfig.color(`    ${resultB.promptConfig.name}: ${singleB}`));
+		}
+
+		// Simple quality checks
+		const issues = [];
+
+		// Check if placeholders are preserved in both
+		const placeholderRegex = /(\[[\w_]+\]|\{[\w_]+\}|%\d*\$?[sd])/g;
+		const originalPlaceholders = (original.t.match(placeholderRegex) || []).sort();
+
+		// For plural forms, check all forms
+		let placeholdersA, placeholdersB;
+		if (Array.isArray(translationA) && translationA.length > 1) {
+			// For plural forms, each form should contain the original placeholders
+			placeholdersA = translationA.flatMap((form) => form?.match(placeholderRegex) || []).sort();
+			const expectedPlaceholdersForPlural = Array(translationA.length).fill(originalPlaceholders).flat().sort();
+			if (JSON.stringify(expectedPlaceholdersForPlural) !== JSON.stringify(placeholdersA)) {
+				issues.push(`${resultA.promptConfig.name}: placeholder mismatch in plural forms`);
+			}
+		} else {
+			const singleA = Array.isArray(translationA) ? translationA[0] : translationA;
+			placeholdersA = (singleA?.match(placeholderRegex) || []).sort();
+			if (JSON.stringify(originalPlaceholders) !== JSON.stringify(placeholdersA)) {
+				issues.push(`${resultA.promptConfig.name}: placeholder mismatch`);
+			}
+		}
+
+		if (Array.isArray(translationB) && translationB.length > 1) {
+			// For plural forms, each form should contain the original placeholders
+			placeholdersB = translationB.flatMap((form) => form?.match(placeholderRegex) || []).sort();
+			const expectedPlaceholdersForPluralB = Array(translationB.length).fill(originalPlaceholders).flat().sort();
+			if (JSON.stringify(expectedPlaceholdersForPluralB) !== JSON.stringify(placeholdersB)) {
+				issues.push(`${resultB.promptConfig.name}: placeholder mismatch in plural forms`);
+			}
+		} else {
+			const singleB = Array.isArray(translationB) ? translationB[0] : translationB;
+			placeholdersB = (singleB?.match(placeholderRegex) || []).sort();
+			if (JSON.stringify(originalPlaceholders) !== JSON.stringify(placeholdersB)) {
+				issues.push(`${resultB.promptConfig.name}: placeholder mismatch`);
+			}
+		}
+
+		// Check if both actually translated (not English)
+		const isTranslatedA = Array.isArray(translationA) && translationA.length > 1 ? 
+			translationA.some((form) => form !== original.t && form !== original.p) : 
+			(Array.isArray(translationA) ? translationA[0] : translationA) !== original.t;
+		const isTranslatedB = Array.isArray(translationB) && translationB.length > 1 ? 
+			translationB.some((form) => form !== original.t && form !== original.p) : 
+			(Array.isArray(translationB) ? translationB[0] : translationB) !== original.t;
+
+		if (!isTranslatedA) {
+			issues.push(`${resultA.promptConfig.name}: not translated`);
+		}
+		if (!isTranslatedB) {
+			issues.push(`${resultB.promptConfig.name}: not translated`);
+		}
+
+		// Check plural form count for languages that have specific requirements
+		if (original.p) {
+			const expectedPluralCount = getExpectedPluralCount(TEST_CONFIG.target_language);
+			if (!Array.isArray(translationA) || translationA.length !== expectedPluralCount) {
+				const actualCount = Array.isArray(translationA) ? translationA.length : 1;
+				issues.push(`${resultA.promptConfig.name}: expected ${expectedPluralCount} plural forms, got ${actualCount}`);
+			}
+			if (!Array.isArray(translationB) || translationB.length !== expectedPluralCount) {
+				const actualCount = Array.isArray(translationB) ? translationB.length : 1;
+				issues.push(`${resultB.promptConfig.name}: expected ${expectedPluralCount} plural forms, got ${actualCount}`);
+			}
+		}
+
+		if (issues.length > 0) {
+			console.log(chalk.red(`    ⚠️  Issues: ${issues.join(', ')}`));
+		}
+	}
+}
+
+/**
+ * Gets expected plural form count for a specific language.
+ * Returns the number of plural forms required for proper translation.
+ *
+ * @since 1.0.0
+ *
+ * @param {string} langCode - Language code to check plural requirements for.
+ *
+ * @return {number} Number of plural forms expected for the language.
+ */
+function getExpectedPluralCount(langCode) {
+	const pluralCounts = {
+		ar: 6, // Arabic
+		ru: 3, // Russian
+		ru_RU: 3, // Russian
+		pl_PL: 3, // Polish
+		fr_FR: 2, // French
+		zh_CN: 1, // Chinese
+		en: 2, // English
+		de_DE: 2, // German
+		es_ES: 2, // Spanish
+		ja: 1, // Japanese
+		ko_KR: 1, // Korean
+	};
+
+	return pluralCounts[langCode] || 2; // Default to 2 for most languages.
+}
+
+/**
+ * Calculates cost savings and performance differences between two translation approaches.
+ * Analyzes token usage, pricing, and provides scaling projections.
+ *
+ * @since 1.0.0
+ *
+ * @param {Object} resultA - Translation result from first approach.
+ * @param {Object} resultB - Translation result from second approach.
+ */
+function calculateSavings(resultA, resultB) {
+	console.log(chalk.yellow('\n💰 COST ANALYSIS\n'));
+
+	if (!resultA.success || !resultB.success) {
+		console.log(chalk.red('❌ Cannot calculate savings - one or both tests failed'));
+
+		return;
+	}
+
+	const pricingA = getModelPricing(resultA.promptConfig.model);
+	const pricingB = getModelPricing(resultB.promptConfig.model);
+
+	const inputCostA = (resultA.usage.prompt_tokens / 1000) * pricingA.inputCostPer1K;
+	const outputCostA = (resultA.usage.completion_tokens / 1000) * pricingA.outputCostPer1K;
+	const totalCostA = inputCostA + outputCostA;
+
+	const inputCostB = (resultB.usage.prompt_tokens / 1000) * pricingB.inputCostPer1K;
+	const outputCostB = (resultB.usage.completion_tokens / 1000) * pricingB.outputCostPer1K;
+	const totalCostB = inputCostB + outputCostB;
+
+	const totalSavings = Math.abs(totalCostA - totalCostB);
+	const cheaperResult = totalCostA < totalCostB ? resultA : resultB;
+	const expensiveResult = totalCostA < totalCostB ? resultB : resultA;
+	const expensiveTotalCost = totalCostA < totalCostB ? totalCostB : totalCostA;
+	const savingsPercentage = ((totalSavings / expensiveTotalCost) * 100).toFixed(1);
+
+	console.log(chalk.blue(`Per-batch costs (${TEST_STRINGS.length} strings):`));
+	console.log(resultA.promptConfig.color(`  ${resultA.promptConfig.name}: $${totalCostA.toFixed(6)} (${formatNumber(resultA.usage.prompt_tokens)} input + ${formatNumber(resultA.usage.completion_tokens)} output tokens)`));
+	console.log(resultB.promptConfig.color(`  ${resultB.promptConfig.name}: $${totalCostB.toFixed(6)} (${formatNumber(resultB.usage.prompt_tokens)} input + ${formatNumber(resultB.usage.completion_tokens)} output tokens)`));
+	console.log(chalk.green(`  💰 Savings: $${totalSavings.toFixed(6)} per batch (${savingsPercentage}% reduction with ${cheaperResult.promptConfig.name})`));
+
+	// Calculate projections based on actual test batch size.
+	const actualBatchSize = TEST_STRINGS.length;
+	const batchesFor1000 = Math.ceil(1000 / actualBatchSize);
+	
+	console.log(chalk.blue(`\nProjected savings for 1000 strings (${batchesFor1000} batches of ${actualBatchSize} strings):`));
+	const costA1000 = totalCostA * batchesFor1000;
+	const costB1000 = totalCostB * batchesFor1000;
+
+	const formattedCostA1000 = parseFloat(formatPrice(costA1000));
+	const formattedCostB1000 = parseFloat(formatPrice(costB1000));
+	const savings1000 = Math.abs(formattedCostB1000 - formattedCostA1000);
+
+	console.log(resultA.promptConfig.color(`  ${resultA.promptConfig.name}: $${formatPrice(costA1000)}`));
+	console.log(resultB.promptConfig.color(`  ${resultB.promptConfig.name}: $${formatPrice(costB1000)}`));
+	console.log(chalk.green(`  💰 Total sgavings: $${formatPrice(savings1000)}`));
+
+	console.log(chalk.blue('\nToken analysis:'));
+	const totalTokensA = resultA.usage.total_tokens;
+	const totalTokensB = resultB.usage.total_tokens;
+	const totalTokenDiff = Math.abs(totalTokensA - totalTokensB);
+	const lowerTokenResult = totalTokensA > totalTokensB ? resultB : resultA;
+	const reductionPercentage = ((totalTokenDiff / (totalTokensA > totalTokensB ? totalTokensA : totalTokensB)) * 100).toFixed(1);
+	
+	console.log(`  Total tokens: ${resultA.promptConfig.name} ${formatNumber(totalTokensA)}, ${resultB.promptConfig.name} ${formatNumber(totalTokensB)}`);
+	console.log(`  Difference: ${formatNumber(totalTokenDiff)} tokens per batch (${reductionPercentage}% reduction with ${lowerTokenResult.promptConfig.name})`);
+	
+	// Calculate bigger picture impact with dollar savings using actual batch size.
+	const batchesFor500 = Math.ceil(500 / actualBatchSize);
+	const batchesFor1000Scale = Math.ceil(1000 / actualBatchSize);  
+	const batchesFor5000 = Math.ceil(5000 / actualBatchSize);
+	
+	const tokenSavings500 = totalTokenDiff * batchesFor500;
+	const tokenSavings1000 = totalTokenDiff * batchesFor1000Scale;
+	const tokenSavings5000 = totalTokenDiff * batchesFor5000;
+	
+	const dollarSavings500 = totalSavings * batchesFor500;
+	const dollarSavings1000 = totalSavings * batchesFor1000Scale;
+	const dollarSavings5000 = totalSavings * batchesFor5000;
+	
+	console.log(chalk.gray(`  Scaling impact (${actualBatchSize} strings per batch):`));
+	console.log(chalk.gray(`    500 strings (${batchesFor500} batches): ${formatNumber(tokenSavings500)} tokens saved ($${formatPrice(dollarSavings500)})`));
+	console.log(chalk.gray(`    1,000 strings (${batchesFor1000Scale} batches): ${formatNumber(tokenSavings1000)} tokens saved ($${formatPrice(dollarSavings1000)})`));
+	console.log(chalk.gray(`    5,000 strings (${batchesFor5000} batches): ${formatNumber(tokenSavings5000)} tokens saved ($${formatPrice(dollarSavings5000)})`));
+
+	// Only show model comparison if they're different
+	if (resultA.promptConfig.model !== resultB.promptConfig.model) {
+		console.log(`  Model comparison: ${resultA.promptConfig.model} vs. ${resultB.promptConfig.model}`);
+		console.log(`  Pricing (per 1K tokens): A=$${formatPrice(pricingA.inputCostPer1K)}/$${formatPrice(pricingA.outputCostPer1K)}, B=$${formatPrice(pricingB.inputCostPer1K)}/$${formatPrice(pricingB.outputCostPer1K)}`);
+	} else {
+		console.log(`  Same model (${resultA.promptConfig.model}) - difference is prompt strategy and temperature`);
+	}
+}
+
+/**
+ * Main function that orchestrates the A/B testing process.
+ * Handles API key validation, OpenAI client setup, and test execution.
+ *
+ * @since 1.0.0
+ *
+ * @return {Promise<void>} Resolves when testing is complete.
+ */
+async function main() {
+	// Check for API key (consistent with main script: API_KEY first, then OPENAI_API_KEY for backward compatibility).
+	const apiKey = process.env.API_KEY || process.env.OPENAI_API_KEY;
+
+	if (!apiKey) {
+		console.error(chalk.red('❌ API key required (set API_KEY or OPENAI_API_KEY environment variable)'));
+		process.exit(1);
+	}
+
+	const openai = new OpenAI({
+		apiKey: apiKey,
+	});
+
+	console.log(chalk.cyan('🚀 A/B Prompt & Model Testing Tool'));
+	console.log(chalk.gray(`Testing ${TEST_STRINGS.length} strings for ${TEST_CONFIG.target_language} translation\n`));
+
+	const pricingA = getModelPricing(TEST_CONFIG.model_a);
+	const pricingB = getModelPricing(TEST_CONFIG.model_b);
+	
+	// Format model configurations nicely.
+	console.log(chalk.yellow('🤖 Model Configuration:'));
+	console.log(chalk.green(`Model A (${PROMPT_CONFIGS.A.name}):`));
+	console.log(chalk.gray(`  • Model: ${TEST_CONFIG.model_a}`));
+	console.log(chalk.gray(`  • Temperature: ${TEST_CONFIG.model_a_temperature}`));
+	console.log(chalk.gray(`  • Pricing: $${formatPrice(pricingA.inputCostPer1K)}/1K input, $${formatPrice(pricingA.outputCostPer1K)}/1K output`));
+	
+	console.log(chalk.blue(`\nModel B (${PROMPT_CONFIGS.B.name}):`));
+	console.log(chalk.gray(`  • Model: ${TEST_CONFIG.model_b}`));
+	console.log(chalk.gray(`  • Temperature: ${TEST_CONFIG.model_b_temperature}`));
+	
+	// Only show pricing for B if different from A.
+	if (TEST_CONFIG.model_a !== TEST_CONFIG.model_b) {
+		console.log(chalk.gray(`  • Pricing: $${formatPrice(pricingB.inputCostPer1K)}/1K input, $${formatPrice(pricingB.outputCostPer1K)}/1K output`));
+	} else {
+		console.log(chalk.gray(`  • Pricing: Same as Model A`));
+	}
+
+	// Show prompts being tested.
+	console.log(chalk.yellow('📝 Prompts Being Tested:'));
+	console.log(PROMPT_CONFIGS.A.color(`\n${PROMPT_CONFIGS.A.emoji} ${PROMPT_CONFIGS.A.name}:`));
+	console.log(chalk.gray('─'.repeat(80)));
+	console.log(chalk.gray(PROMPT_CONFIGS.A.getPrompt(TEST_CONFIG.target_language)));
+	console.log(PROMPT_CONFIGS.B.color(`\n${PROMPT_CONFIGS.B.emoji} ${PROMPT_CONFIGS.B.name}:`));
+	console.log(chalk.gray('─'.repeat(80)));
+	console.log(chalk.gray(PROMPT_CONFIGS.B.getPrompt(TEST_CONFIG.target_language)));
+	console.log(chalk.gray('─'.repeat(80)));
+
+	// Test both approaches.
+	const resultA = await testTranslation(openai, TEST_STRINGS, PROMPT_CONFIGS.A, TEST_CONFIG.target_language);
+	const resultB = await testTranslation(openai, TEST_STRINGS, PROMPT_CONFIGS.B, TEST_CONFIG.target_language);
+
+	// Compare results.
+	compareTranslations(TEST_STRINGS, resultA, resultB);
+	calculateSavings(resultA, resultB);
+
+	console.log(chalk.cyan('\n✨ Prompt A/B test completed!'));
+}
+
+// Handle errors
+process.on('unhandledRejection', (reason) => {
+	console.error('Unhandled promise rejection:', reason);
+	process.exit(1);
+});
+
+main().catch((error) => {
+	console.error('Error:', error);
+	process.exit(1);
+});
