@@ -13,6 +13,8 @@ import { getPluralForms, extractPluralCount } from '../src/utils/poFileUtils.js'
 import { formatNumber } from '../src/utils/costCalculations.js';
 import { loadDictionary, findDictionaryMatches } from '../src/utils/dictionaryUtils.js';
 
+const CURRENT_DIR = path.dirname(fileURLToPath(import.meta.url));
+
 // A/B Test Configuration
 const TEST_CONFIG = {
 	model_a: 'gpt-4o-mini',
@@ -157,8 +159,7 @@ let modelCosts;
 let fallbackPricing;
 
 try {
-	const currentDir = path.dirname(fileURLToPath(import.meta.url));
-	const configPath = path.resolve(currentDir, '../config/openai-pricing.json');
+	const configPath = path.resolve(CURRENT_DIR, '../config/openai-pricing.json');
 	const costData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
 
 	modelCosts = costData.models;
@@ -280,9 +281,8 @@ async function testTranslation(openai, testStrings, promptConfig, targetLang) {
 		info: (msg) => console.log(chalk.blue(`ℹ️  ${msg}`)),
 	};
 
-	// Load dictionary and find matches (like potomatic does).
-	const currentDir = path.dirname(fileURLToPath(import.meta.url));
-	const dictionaryDir = currentDir; // Look for dictionary files in tools directory.
+	// Load dictionary and find matches (like Potomatic does).
+	const dictionaryDir = CURRENT_DIR; // Look for dictionary files in tools directory.
 	const dictionary = loadDictionary(dictionaryDir, targetLang, mockLogger);
 	const dictionaryMatches = findDictionaryMatches(batch, dictionary);
 
@@ -620,7 +620,7 @@ function calculateSavings(resultA, resultB) {
 
 	console.log(resultA.promptConfig.color(`  ${resultA.promptConfig.name}: $${formatPrice(costA1000)}`));
 	console.log(resultB.promptConfig.color(`  ${resultB.promptConfig.name}: $${formatPrice(costB1000)}`));
-	console.log(chalk.green(`  💰 Total sgavings: $${formatPrice(savings1000)}`));
+	console.log(chalk.green(`  💰 Total savings: $${formatPrice(savings1000)}`));
 
 	console.log(chalk.blue('\nToken analysis:'));
 	const totalTokensA = resultA.usage.total_tokens;

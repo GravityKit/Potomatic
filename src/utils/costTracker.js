@@ -60,10 +60,10 @@ function loadProviderPricingData(providerName) {
 		const currentDir = path.dirname(fileURLToPath(import.meta.url));
 
 		// Look for {provider}-pricing.json in the config directory relative to this module.
-		const jsonPath = path.resolve(currentDir, `../../config/${providerName}-pricing.json`);
+		const jsonPath = path.resolve(currentDir, '../../config', `${providerName}-pricing.json`);
 
 		// Fallback to working directory if not found.
-		const fallbackPath = path.resolve(process.cwd(), `config/${providerName}-pricing.json`);
+		const fallbackPath = path.join(process.cwd(), 'config', `${providerName}-pricing.json`);
 
 		let pricingContent;
 
