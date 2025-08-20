@@ -44,7 +44,8 @@ export class Provider {
 	async _loadProviderPricing(providerName) {
 		try {
 			const currentDir = path.dirname(fileURLToPath(import.meta.url));
-			const pricingPath = path.resolve(currentDir, '..', '..', '..', 'config', `${providerName}-pricing.json`);
+			const configDir = path.resolve(currentDir, '../../../config');
+			const pricingPath = path.join(configDir, `${providerName}-pricing.json`);
 			const pricingContent = fs.readFileSync(pricingPath, 'utf-8');
 
 			this.providerPricing = JSON.parse(pricingContent);

@@ -5,6 +5,7 @@ import { OpenAI } from 'openai';
 import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { getPromptTokenCount } from '../src/utils/promptLoader.js';
 import { getLanguageName } from '../src/utils/languageMapping.js';
 import { buildXmlPrompt, parseXmlResponse, buildDictionaryResponse } from '../src/utils/xmlTranslation.js';
@@ -156,7 +157,7 @@ let modelCosts;
 let fallbackPricing;
 
 try {
-	const currentDir = path.dirname(new URL(import.meta.url).pathname);
+	const currentDir = path.dirname(fileURLToPath(import.meta.url));
 	const configPath = path.resolve(currentDir, '../config/openai-pricing.json');
 	const costData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
 
@@ -280,7 +281,7 @@ async function testTranslation(openai, testStrings, promptConfig, targetLang) {
 	};
 
 	// Load dictionary and find matches (like potomatic does).
-	const currentDir = path.dirname(new URL(import.meta.url).pathname);
+	const currentDir = path.dirname(fileURLToPath(import.meta.url));
 	const dictionaryDir = currentDir; // Look for dictionary files in tools directory.
 	const dictionary = loadDictionary(dictionaryDir, targetLang, mockLogger);
 	const dictionaryMatches = findDictionaryMatches(batch, dictionary);
