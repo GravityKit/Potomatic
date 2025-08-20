@@ -1,4 +1,6 @@
 import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 /**
  * Abstract Provider Base Class.
@@ -41,7 +43,9 @@ export class Provider {
 	 */
 	async _loadProviderPricing(providerName) {
 		try {
-			const pricingPath = new URL(`../../../config/${providerName}-pricing.json`, import.meta.url).pathname;
+			const currentDir = path.dirname(fileURLToPath(import.meta.url));
+			const configDir = path.resolve(currentDir, '../../../config');
+			const pricingPath = path.join(configDir, `${providerName}-pricing.json`);
 			const pricingContent = fs.readFileSync(pricingPath, 'utf-8');
 
 			this.providerPricing = JSON.parse(pricingContent);

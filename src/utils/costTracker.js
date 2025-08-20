@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 /**
  * Cost Tracking Utility.
@@ -56,7 +57,7 @@ function loadProviderPricingData(providerName) {
 	}
 
 	try {
-		const currentDir = path.dirname(new URL(import.meta.url).pathname);
+		const currentDir = path.dirname(fileURLToPath(import.meta.url));
 
 		// Look for {provider}-pricing.json in the config directory relative to this module.
 		const jsonPath = path.resolve(currentDir, `../../config/${providerName}-pricing.json`);

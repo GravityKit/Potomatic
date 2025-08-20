@@ -8,6 +8,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { encoding_for_model as encodingForModel } from 'tiktoken';
 import { getApiTargetLanguage } from './languageMapping.js';
 import { getPluralForms, extractPluralCount } from './poFileUtils.js';
@@ -49,7 +50,7 @@ function loadPromptTemplate(promptFilePath) {
  */
 export function buildSystemPrompt(targetLang, sourceLang = 'English', promptFilePath = null) {
 	if (!promptFilePath) {
-		const currentDir = path.dirname(new URL(import.meta.url).pathname);
+		const currentDir = path.dirname(fileURLToPath(import.meta.url));
 
 		promptFilePath = path.resolve(currentDir, '../../config/prompt.md');
 	}
