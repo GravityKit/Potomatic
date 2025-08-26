@@ -1,4 +1,5 @@
 import { OpenAIProvider } from './openai/OpenAIProvider.js';
+import { GeminiProvider } from './gemini/GeminiProvider.js';
 
 /**
  * Creates and configures AI translation providers based on configuration.
@@ -26,6 +27,8 @@ export class ProviderFactory {
 		switch (providerName.toLowerCase()) {
 			case 'openai':
 				return new OpenAIProvider(config, logger);
+			case 'gemini':
+				return new GeminiProvider(config, logger);
 			default:
 				throw new Error(`Unsupported provider: ${providerName}. ` + `Supported providers: ${ProviderFactory.getSupportedProviders().join(', ')}`);
 		}
@@ -39,7 +42,7 @@ export class ProviderFactory {
 	 * @return {Array<string>} Array of supported provider names.
 	 */
 	static getSupportedProviders() {
-		return ['openai'];
+		return ['openai', 'gemini'];
 	}
 
 	/**
@@ -74,6 +77,18 @@ export class ProviderFactory {
 					provider: 'openai',
 					apiKey: 'your-openai-api-key',
 					model: 'gpt-3.5-turbo',
+				},
+			},
+			{
+				name: 'gemini',
+				displayName: 'Google Gemini',
+				description: 'Google Gemini models',
+				status: 'implemented',
+				models: ['gemini-2.5-pro', 'gemini-2.5-flash'],
+				configExample: {
+					provider: 'gemini',
+					apiKey: 'your-gemini-api-key',
+					model: 'gemini-2.5-flash',
 				},
 			},
 		];

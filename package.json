@@ -32,6 +32,7 @@
 	},
 	"scripts": {
 		"translate": "./potomatic",
+		"translate:gemini": "./potomatic --provider gemini",
 		"ab-prompt-test": "node tools/ab-prompt-test",
 		"test": "vitest run",
 		"test:watch": "vitest",
@@ -45,6 +46,7 @@
 		"node": ">=18"
 	},
 	"dependencies": {
+		"@google/generative-ai": "^0.24.1",
 		"chalk": "^5.3.0",
 		"commander": "^12.0.0",
 		"dotenv": "^16.5.0",
