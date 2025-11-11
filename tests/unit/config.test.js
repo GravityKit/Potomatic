@@ -52,4 +52,91 @@ describe('Config Parsing', () => {
 			expect(() => schema().parse({ v: 'no' })).toThrow();
 		});
 	});
+
+	describe('validateConfiguration', () => {
+		it('passes validation with all required options', () => {
+			const result = validateConfiguration({
+				apiKey: 'test-key',
+				targetLanguages: ['fr_FR'],
+				potFilePath: './test.pot',
+			});
+
+			expect(result.isValid).toBe(true);
+			expect(result.errors).toEqual([]);
+		});
+
+		it('passes validation when dryRun is true without API key', () => {
+			const result = validateConfiguration({
+				dryRun: true,
+				targetLanguages: ['fr_FR'],
+				potFilePath: './test.pot',
+			});
+
+			expect(result.isValid).toBe(true);
+			expect(result.errors).toEqual([]);
+		});
+
+		it('fails validation when API key is missing without dryRun', () => {
+			const result = validateConfiguration({
+				targetLanguages: ['fr_FR'],
+				potFilePath: './test.pot',
+			});
+
+			expect(result.isValid).toBe(false);
+			expect(result.errors.some(e => e.includes('API key required'))).toBe(true);
+		});
+
+		it('fails validation when target languages are missing', () => {
+			const result = validateConfiguration({
+				apiKey: 'test-key',
+				potFilePath: './test.pot',
+			});
+
+			expect(result.isValid).toBe(false);
+			expect(result.errors.some(e => e.includes('Target language required'))).toBe(true);
+		});
+
+		it('fails validation when target languages array is empty', () => {
+			const result = validateConfiguration({
+				apiKey: 'test-key',
+				targetLanguages: [],
+				potFilePath: './test.pot',
+			});
+
+			expect(result.isValid).toBe(false);
+			expect(result.errors.some(e => e.includes('Target language required'))).toBe(true);
+		});
+
+		it('fails validation when POT file path is missing', () => {
+			const result = validateConfiguration({
+				apiKey: 'test-key',
+				targetLanguages: ['fr_FR'],
+			});
+
+			expect(result.isValid).toBe(false);
+			expect(result.errors.some(e => e.includes('POT file required'))).toBe(true);
+		});
+
+		it('fails validation when model name is empty string', () => {
+			const result = validateConfiguration({
+				apiKey: 'test-key',
+				targetLanguages: ['fr_FR'],
+				potFilePath: './test.pot',
+				model: '   ',
+			});
+
+			expect(result.isValid).toBe(false);
+			expect(result.errors.some(e => e.includes('Model name cannot be empty'))).toBe(true);
+		});
+
+		it('collects multiple validation errors', () => {
+			const result = validateConfiguration({});
+
+			expect(result.isValid).toBe(false);
+			expect(result.errors).toHaveLength(3);
+			expect(result.errors.some(e => e.includes('API key required'))).toBe(true);
+			expect(result.errors.some(e => e.includes('Target language required'))).toBe(true);
+			expect(result.errors.some(e => e.includes('POT file required'))).toBe(true);
+		});
+	});
 });
