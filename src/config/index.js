@@ -65,12 +65,12 @@ const envSchema = z.object({
 	// Retry settings.
 	MAX_RETRIES: z.coerce.number().int().min(0).max(10).default(3),
 	RETRY_DELAY: z.coerce.number().int().min(500).max(30000).default(2000),
-	ABORT_ON_FAILURE: z.coerce.boolean().default(false),
-	SKIP_LANGUAGE_ON_FAILURE: z.coerce.boolean().default(false),
+	ABORT_ON_FAILURE: booleanStringSchema(false),
+	SKIP_LANGUAGE_ON_FAILURE: booleanStringSchema(false),
 
 	// Testing settings.
 	TEST_RETRY_FAILURE_RATE: z.coerce.number().min(0).max(1).optional(),
-	TEST_ALLOW_COMPLETE_FAILURE: z.coerce.boolean().default(false),
+	TEST_ALLOW_COMPLETE_FAILURE: booleanStringSchema(false),
 
 	// Limits.
 	MAX_COST: z.coerce.number().min(0.001).optional(),
@@ -84,7 +84,7 @@ const envSchema = z.object({
 
 	// Dictionary settings.
 	DICTIONARY_PATH: z.string().default('./config/dictionaries'),
-	USE_DICTIONARY: z.coerce.boolean().default(false),
+	USE_DICTIONARY: booleanStringSchema(false),
 
 	// Optional target languages and pot file (can set defaults.).
 	TARGET_LANGUAGES: z.string().optional(),
@@ -100,10 +100,10 @@ const envSchema = z.object({
 
 	// Debug and behavior.
 	VERBOSE_LEVEL: z.coerce.number().int().min(0).max(3).default(1),
-	SAVE_DEBUG_INFO: z.coerce.boolean().default(false),
-	DRY_RUN: z.coerce.boolean().default(false),
-	FORCE_TRANSLATE: z.coerce.boolean().default(false),
-	RICH_PROGRESS: z.coerce.boolean().default(false),
+	SAVE_DEBUG_INFO: booleanStringSchema(false),
+	DRY_RUN: booleanStringSchema(false),
+	FORCE_TRANSLATE: booleanStringSchema(false),
+	RICH_PROGRESS: booleanStringSchema(false),
 });
 
 /**
@@ -129,6 +129,25 @@ function parseEnvironmentConfig() {
 
 		process.exit(1);
 	}
+}
+
+/**
+ * Creates a Zod schema for parsing boolean values from strings (env vars and CLI args).
+ * Handles common string representations: "true", "false", "1", "0".
+ *
+ * @since TBD
+ *
+ * @param {boolean} defaultValue - Default value if not provided or empty.
+ *
+ * @return {z.ZodEffects} Zod schema that parses boolean strings.
+ */
+function booleanStringSchema(defaultValue = false) {
+	return z
+		.string()
+		.transform((s) => s.trim().toLowerCase())
+		.pipe(z.enum(['true', 'false', '1', '0', '']))
+		.default(defaultValue ? 'true' : 'false')
+		.transform((val) => val === 'true' || val === '1');
 }
 
 // Parse environment configuration once at module load.
