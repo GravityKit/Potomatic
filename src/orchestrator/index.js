@@ -814,9 +814,7 @@ export class TranslationOrchestrator {
 
 		if (totalValidationIssues > 0) {
 			const breakdown = formatValidationBreakdown(stats.validationStats);
-			this.mainLogger.warn(
-				`⚠️  ${language}: ${breakdown}. Run with -v 2 for details.`
-			);
+			this.mainLogger.warn(`⚠️  ${language}: ${breakdown}. Run with -v 2 for details.`);
 		}
 	}
 

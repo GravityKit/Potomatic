@@ -185,10 +185,7 @@ export function printTranslationRunSummary(allLanguageStats, logger, effectiveCh
 	}).length;
 
 	// Print overall results.
-	const summaryParts = [
-		`Languages processed: ${getStyledColor('success')(totals.languagesProcessed)}`,
-		`With errors: ${getStyledColor('error')(totals.languagesWithErrors)}`,
-	];
+	const summaryParts = [`Languages processed: ${getStyledColor('success')(totals.languagesProcessed)}`, `With errors: ${getStyledColor('error')(totals.languagesWithErrors)}`];
 
 	if (languagesWithWarnings > 0) {
 		summaryParts.push(`With warnings: ${getStyledColor('warning')(languagesWithWarnings)}`);

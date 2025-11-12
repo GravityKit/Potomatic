@@ -630,14 +630,7 @@ export class OpenAIProvider extends Provider {
 	_parseApiResponse(responseContent, batch, pluralCount, dictionaryCount = 0) {
 		try {
 			const verbosityLevel = this.config.verboseLevel || 1;
-			const { translations, validationStats } = parseXmlResponse(
-				responseContent,
-				batch,
-				pluralCount,
-				this.logger,
-				dictionaryCount,
-				verbosityLevel
-			);
+			const { translations, validationStats } = parseXmlResponse(responseContent, batch, pluralCount, this.logger, dictionaryCount, verbosityLevel);
 
 			return { translations, validationStats };
 		} catch (error) {

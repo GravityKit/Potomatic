@@ -83,7 +83,7 @@ describe('Config Parsing', () => {
 			});
 
 			expect(result.isValid).toBe(false);
-			expect(result.errors.some(e => e.includes('API key required'))).toBe(true);
+			expect(result.errors.some((e) => e.includes('API key required'))).toBe(true);
 		});
 
 		it('fails validation when target languages are missing', () => {
@@ -93,7 +93,7 @@ describe('Config Parsing', () => {
 			});
 
 			expect(result.isValid).toBe(false);
-			expect(result.errors.some(e => e.includes('Target language required'))).toBe(true);
+			expect(result.errors.some((e) => e.includes('Target language required'))).toBe(true);
 		});
 
 		it('fails validation when target languages array is empty', () => {
@@ -104,7 +104,7 @@ describe('Config Parsing', () => {
 			});
 
 			expect(result.isValid).toBe(false);
-			expect(result.errors.some(e => e.includes('Target language required'))).toBe(true);
+			expect(result.errors.some((e) => e.includes('Target language required'))).toBe(true);
 		});
 
 		it('fails validation when POT file path is missing', () => {
@@ -114,7 +114,7 @@ describe('Config Parsing', () => {
 			});
 
 			expect(result.isValid).toBe(false);
-			expect(result.errors.some(e => e.includes('POT file required'))).toBe(true);
+			expect(result.errors.some((e) => e.includes('POT file required'))).toBe(true);
 		});
 
 		it('fails validation when model name is empty string', () => {
@@ -126,7 +126,7 @@ describe('Config Parsing', () => {
 			});
 
 			expect(result.isValid).toBe(false);
-			expect(result.errors.some(e => e.includes('Model name cannot be empty'))).toBe(true);
+			expect(result.errors.some((e) => e.includes('Model name cannot be empty'))).toBe(true);
 		});
 
 		it('collects multiple validation errors', () => {
@@ -134,9 +134,9 @@ describe('Config Parsing', () => {
 
 			expect(result.isValid).toBe(false);
 			expect(result.errors).toHaveLength(3);
-			expect(result.errors.some(e => e.includes('API key required'))).toBe(true);
-			expect(result.errors.some(e => e.includes('Target language required'))).toBe(true);
-			expect(result.errors.some(e => e.includes('POT file required'))).toBe(true);
+			expect(result.errors.some((e) => e.includes('API key required'))).toBe(true);
+			expect(result.errors.some((e) => e.includes('Target language required'))).toBe(true);
+			expect(result.errors.some((e) => e.includes('POT file required'))).toBe(true);
 		});
 
 		it('generates provider-aware error message for OpenAI', () => {
@@ -147,8 +147,8 @@ describe('Config Parsing', () => {
 			});
 
 			expect(result.isValid).toBe(false);
-			expect(result.errors.some(e => e.includes('OpenAI API key required'))).toBe(true);
-			expect(result.errors.some(e => e.includes('OPENAI_API_KEY'))).toBe(true);
+			expect(result.errors.some((e) => e.includes('OpenAI API key required'))).toBe(true);
+			expect(result.errors.some((e) => e.includes('OPENAI_API_KEY'))).toBe(true);
 		});
 
 		it('generates provider-aware error message for Gemini', () => {
@@ -159,8 +159,8 @@ describe('Config Parsing', () => {
 			});
 
 			expect(result.isValid).toBe(false);
-			expect(result.errors.some(e => e.includes('Gemini API key required'))).toBe(true);
-			expect(result.errors.some(e => e.includes('GEMINI_API_KEY'))).toBe(true);
+			expect(result.errors.some((e) => e.includes('Gemini API key required'))).toBe(true);
+			expect(result.errors.some((e) => e.includes('GEMINI_API_KEY'))).toBe(true);
 		});
 	});
 
@@ -203,7 +203,7 @@ describe('Config Parsing', () => {
 		it('prefers POTOMATIC_ prefix over standard key', () => {
 			const detected = detectProvider({
 				POTOMATIC_GEMINI_API_KEY: 'test-key-1',
-				OPENAI_API_KEY: 'test-key-2'
+				OPENAI_API_KEY: 'test-key-2',
 			});
 			expect(detected).toBe('gemini');
 		});
@@ -221,7 +221,7 @@ describe('Config Parsing', () => {
 		it('prefers non-openai providers when multiple standard keys exist', () => {
 			const detected = detectProvider({
 				GEMINI_API_KEY: 'test-key-1',
-				OPENAI_API_KEY: 'test-key-2'
+				OPENAI_API_KEY: 'test-key-2',
 			});
 			expect(detected).toBe('gemini');
 		});

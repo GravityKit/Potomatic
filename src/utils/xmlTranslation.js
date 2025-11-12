@@ -119,7 +119,7 @@ function validatePluralForms(forms, originalMsgid, expectedCount, itemId, logger
 	const issues = [];
 
 	// Find first non-empty form to use as fallback.
-	const fallbackForm = correctedForms.find(f => f && f.trim() !== '') || '';
+	const fallbackForm = correctedForms.find((f) => f && f.trim() !== '') || '';
 
 	// Ensure we have exactly the right number of forms.
 	if (correctedForms.length < expectedCount) {
@@ -128,10 +128,7 @@ function validatePluralForms(forms, originalMsgid, expectedCount, itemId, logger
 		issues.push(`insufficient forms (expected ${expectedCount}, got ${correctedForms.length})`);
 
 		if (verbosityLevel >= 2) {
-			logger.warn(
-				`Insufficient plural forms at index ${itemId} for "${originalMsgid.substring(0, 50)}...": ` +
-				`Expected ${expectedCount}, got ${correctedForms.length}. Padding with first form as fallback.`
-			);
+			logger.warn(`Insufficient plural forms at index ${itemId} for "${originalMsgid.substring(0, 50)}...": ` + `Expected ${expectedCount}, got ${correctedForms.length}. Padding with first form as fallback.`);
 		}
 
 		while (correctedForms.length < expectedCount) {
@@ -143,36 +140,28 @@ function validatePluralForms(forms, originalMsgid, expectedCount, itemId, logger
 		issues.push(`excess forms (expected ${expectedCount}, got ${correctedForms.length})`);
 
 		if (verbosityLevel >= 2) {
-			logger.warn(
-				`Too many plural forms at index ${itemId} for "${originalMsgid.substring(0, 50)}...": ` +
-				`Expected ${expectedCount}, got ${correctedForms.length}. Truncating.`
-			);
+			logger.warn(`Too many plural forms at index ${itemId} for "${originalMsgid.substring(0, 50)}...": ` + `Expected ${expectedCount}, got ${correctedForms.length}. Truncating.`);
 		}
 
 		correctedForms = correctedForms.slice(0, expectedCount);
 	}
 
 	// Warn about empty forms (except when all are empty - likely not translated yet).
-	const nonEmptyCount = correctedForms.filter(f => f && f.trim() !== '').length;
+	const nonEmptyCount = correctedForms.filter((f) => f && f.trim() !== '').length;
 
 	if (nonEmptyCount > 0 && nonEmptyCount < expectedCount) {
 		hasIssues = true;
 
-		const emptyIndices = correctedForms
-			.map((f, i) => (f && f.trim() !== '' ? null : i))
-			.filter(i => i !== null);
+		const emptyIndices = correctedForms.map((f, i) => (f && f.trim() !== '' ? null : i)).filter((i) => i !== null);
 
 		issues.push(`incomplete forms (empty at indices [${emptyIndices.join(', ')}])`);
 
 		if (verbosityLevel >= 2) {
-			logger.warn(
-				`Incomplete plural forms at index ${itemId} for "${originalMsgid.substring(0, 50)}...": ` +
-				`Forms at indices [${emptyIndices.join(', ')}] are empty. Filling with first form as fallback.`
-			);
+			logger.warn(`Incomplete plural forms at index ${itemId} for "${originalMsgid.substring(0, 50)}...": ` + `Forms at indices [${emptyIndices.join(', ')}] are empty. Filling with first form as fallback.`);
 		}
 
 		// Fill empty forms with the first non-empty form as fallback.
-		correctedForms = correctedForms.map(f => (f && f.trim() !== '') ? f : fallbackForm);
+		correctedForms = correctedForms.map((f) => (f && f.trim() !== '' ? f : fallbackForm));
 	}
 
 	if (hasIssues && verbosityLevel >= 3) {
@@ -270,14 +259,7 @@ export function parseXmlResponse(xmlResponse, batch, pluralCount, logger, dictio
 				}
 
 				// Validate and auto-correct plural forms.
-				const { correctedForms, hasIssues } = validatePluralForms(
-					forms,
-					batch[batchIndex].msgid,
-					pluralCount,
-					responseIndex,
-					logger,
-					verbosityLevel
-				);
+				const { correctedForms, hasIssues } = validatePluralForms(forms, batch[batchIndex].msgid, pluralCount, responseIndex, logger, verbosityLevel);
 
 				if (hasIssues) {
 					validationStats.stringsWithPluralIssues++;
@@ -293,19 +275,9 @@ export function parseXmlResponse(xmlResponse, batch, pluralCount, logger, dictio
 					// If this entry expects plural forms, validate the result
 					if (batch[batchIndex].msgid_plural) {
 						if (verbosityLevel >= 2) {
-							logger.warn(
-								`Missing plural forms at index ${responseIndex} for "${batch[batchIndex].msgid.substring(0, 50)}...": ` +
-								`Expected ${pluralCount} forms but received singular translation. Using single translation for form 0 only.`
-							);
+							logger.warn(`Missing plural forms at index ${responseIndex} for "${batch[batchIndex].msgid.substring(0, 50)}...": ` + `Expected ${pluralCount} forms but received singular translation. Using single translation for form 0 only.`);
 						}
-						const { correctedForms, hasIssues } = validatePluralForms(
-							[translation],
-							batch[batchIndex].msgid,
-							pluralCount,
-							responseIndex,
-							logger,
-							verbosityLevel
-						);
+						const { correctedForms, hasIssues } = validatePluralForms([translation], batch[batchIndex].msgid, pluralCount, responseIndex, logger, verbosityLevel);
 
 						if (hasIssues) {
 							validationStats.stringsWithPluralIssues++;
