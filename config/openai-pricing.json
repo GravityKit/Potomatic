@@ -1,8 +1,24 @@
 {
-	"lastUpdated": "2025-06-27",
-	"source": "https://platform.openai.com/docs/pricing",
-	"note": "Prices are per 1,000 tokens in USD.",
+	"lastUpdated": "2025-01-12",
+	"source": "https://platform.openai.com/docs/pricing?latest-pricing=standard",
+	"note": "Prices are per 1,000 tokens in USD. Standard tier pricing.",
 	"models": {
+		"gpt-5": {
+			"prompt": 0.00125,
+			"completion": 0.01
+		},
+		"gpt-5-mini": {
+			"prompt": 0.00025,
+			"completion": 0.002
+		},
+		"gpt-5-nano": {
+			"prompt": 0.00005,
+			"completion": 0.0004
+		},
+		"gpt-5-pro": {
+			"prompt": 0.015,
+			"completion": 0.12
+		},
 		"gpt-4.1": {
 			"prompt": 0.002,
 			"completion": 0.008
@@ -14,10 +30,6 @@
 		"gpt-4.1-nano": {
 			"prompt": 0.0001,
 			"completion": 0.0004
-		},
-		"gpt-4.5-preview": {
-			"prompt": 0.075,
-			"completion": 0.15
 		},
 		"gpt-4o": {
 			"prompt": 0.0025,
@@ -42,6 +54,10 @@
 		"o3": {
 			"prompt": 0.002,
 			"completion": 0.008
+		},
+		"o3-deep-research": {
+			"prompt": 0.01,
+			"completion": 0.04
 		},
 		"o4-mini": {
 			"prompt": 0.0011,
