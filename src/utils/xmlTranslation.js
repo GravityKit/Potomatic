@@ -50,10 +50,10 @@ export function buildXmlPrompt(batch, targetLang, pluralCount, dictionaryMatches
 
 			// For plural forms, use separate <singular> and <plural> tags.
 			if (entry.msgid_plural) {
-				/*return `<source ${attrs.join(' ')}>
+				return `<source ${attrs.join(' ')}>
   <singular>${escapeXmlAttribute(entry.msgid)}</singular>
   <plural>${escapeXmlAttribute(entry.msgid_plural)}</plural>
-</source>`;*/
+</source>`;
 			}
 
 			// For singular forms, use simple format.
