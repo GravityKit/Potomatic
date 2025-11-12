@@ -32,6 +32,7 @@ For improved results, consider refining your prompt, using a higher-tier model, 
   * [WordPress plugin](#wordpress-plugin)
   * [JSON output](#json-output)
 * [📖 CLI Options Reference](#-cli-options-reference)
+* [🌍 Supported Languages](#-supported-languages)
 * [⚙️ Configuration Files](#-configuration-files)
 * [📜 Available Scripts](#-available-scripts)
 * [🧪 A/B Testing for Prompt Optimization](#-ab-testing-for-prompt-optimization)
@@ -241,7 +242,7 @@ Using this example, "Block Editor" and other terms will not be translated to tar
 
 | Option                           | Short | Description                                                     | Default |
 | -------------------------------- | ----- | --------------------------------------------------------------- | ------- |
-| `--target-languages <languages>` | `-l`  | Target locale codes, comma-separated (e.g., fr_FR, es_ES, de_DE) | -       |
+| `--target-languages <languages>` | `-l`  | Target language codes, comma-separated. **Accepts multiple formats**: WordPress locale (`fr_FR`, `es_ES`), ISO 639-1 (`fr`, `es`), ISO 639-2 (`fra`, `spa`), or language names (`French`, `Spanish`). See [supported languages](#supported-languages) below. | -       |
 | `--pot-file-path <path>`         | `-p`  | Path to the input `.pot` file containing source strings         | -       |
 | `--api-key <key>`                | `-k`  | Provider API key (5-tier precedence: CLI > `POTOMATIC_<PROVIDER>_API_KEY` > `<PROVIDER>_API_KEY` > `POTOMATIC_API_KEY` > `API_KEY`) | -       |
 
@@ -270,7 +271,7 @@ Using this example, "Block Editor" and other terms will not be translated to tar
 | `--output-format <format>`  | -     | Output format: `console` or `json` (default: console)                                                                  | `console`     |
 | `--output-file <path>`      | -     | Path to save JSON output (use stdout if not provided)                                                                  | -             |
 | `--po-file-prefix <prefix>` | -     | Prefix for each output `.po` file (e.g., "app-" → "app-fr_FR.po")                                                      | -             |
-| `--locale-format <format>`  | -     | Format to use for locale codes in file names: `wp_locale` (ru_RU), `iso_639_1` (ru), `iso_639_2` (rus), or `target_lang` (default) | `target_lang` |
+| `--locale-format <format>`  | -     | **Controls output filename format only** (not input). Options: `wp_locale` (ru_RU), `iso_639_1` (ru), `iso_639_2` (rus), or `target_lang` (uses input format as-is) | `target_lang` |
 
 ### Translation Behavior
 
@@ -329,6 +330,43 @@ Using this example, "Block Editor" and other terms will not be translated to tar
 | `--help`    | `-h`  | Display help for command  | -       |
 
 **Note**: All options can also be set via environment variables. Environment variable names typically match the CLI option names in UPPER_CASE format (e.g., `--max-cost` becomes `MAX_COST`, `--retry-delay` becomes `RETRY_DELAY`).
+
+---
+
+## 🌍 Supported Languages
+
+**Potomatic** supports a wide range of languages (including regional variants) and accepts multiple input formats. You can specify target languages using any of the following formats:
+
+### Input Formats (for `--target-languages`)
+
+- **WordPress locale format**: `fr_FR`, `es_ES`, `de_DE`, `pt_BR`, `zh_CN`
+- **ISO 639-1 codes** (2-letter): `fr`, `es`, `de`, `pt`, `zh`
+- **ISO 639-2 codes** (3-letter): `fra`, `spa`, `deu`, `por`, `zho`
+- **BCP-47 format** (with dash): `fr-FR`, `es-ES`, `de-DE`
+- **Language names**: `French`, `Spanish`, `German`, `Portuguese`, `Chinese`
+
+**Example**: All of the following specify French:
+```bash
+./potomatic -l fr_FR -p translations.pot
+./potomatic -l fr -p translations.pot
+./potomatic -l fra -p translations.pot
+./potomatic -l "French" -p translations.pot
+```
+
+### Output Formats (for `--locale-format`)
+
+Control how language codes appear in output filenames:
+
+- `target_lang` (default): Uses the format you provided (e.g., `fr` → `fr.po`, `fr_FR` → `fr_FR.po`)
+- `wp_locale`: WordPress format with region (e.g., `fr_FR.po`, `es_ES.po`)
+- `iso_639_1`: 2-letter ISO codes (e.g., `fr.po`, `es.po`)
+- `iso_639_2`: 3-letter ISO codes (e.g., `fra.po`, `spa.po`)
+
+### Complete Language List
+
+For a full list of supported languages and their corresponding codes, see the [language mapping reference](src/utils/languageMapping.js). The mappings are based on [GlotPress locale data](https://github.com/GlotPress/GlotPress/blob/develop/locales/locales.php) from WordPress.org's translation platform.
+
+**Major supported languages include**: Afrikaans, Arabic (multiple variants), Bengali, Chinese (Simplified/Traditional), Czech, Danish, Dutch, English (multiple variants), French, German, Greek, Hebrew, Hindi, Hungarian, Indonesian, Italian, Japanese, Korean, Persian, Polish, Portuguese (Brazil/Portugal), Romanian, Russian, Spanish (multiple variants), Swedish, Thai, Turkish, Ukrainian, Vietnamese, and more.
 
 ---
 
