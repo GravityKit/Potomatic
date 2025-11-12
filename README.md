@@ -8,9 +8,9 @@
 
 **Potomatic** is a command-line tool for translating `.pot` (Portable Object Template) files into multiple languages using AI (currently OpenAI). We built it to streamline large-scale localization of WordPress products, a process we detail in [this behind‑the‑scenes article](https://www.gravitykit.com/translating-wordpress-plugins-using-chatgpt/).
 
-While [`gpt-po`](https://github.com/ryanhex53/gpt-po) helped us get started, we needed smarter retry logic, cost controls, and better visibility into large jobs, among other things. **Potomatic** delivers those improvements and more, as well adds fine‑grained prompt tuning through a built‑in [A/B testing utility](#-ab-testing-for-prompt-optimization).
+While [`gpt-po`](https://github.com/ryanhex53/gpt-po) helped us get started, we needed smarter retry logic, cost controls, and better visibility into large jobs, among other things. **Potomatic** delivers those improvements and more, as well adds fine‑grained prompt tuning through a built‑in [A/B testing utility](#ab-testing-for-prompt-optimization).
 
-## 📢 Disclaimer
+## Disclaimer
 
 Translation quality varies depending on factors such as model selection, prompt design, and the complexity of the source text. **Potomatic** can generate a baseline translation, but the output should always be reviewed and verified before use.
 
@@ -18,44 +18,44 @@ For improved results, consider refining your prompt, using a higher-tier model, 
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
-* [🚀 Key Features](#-key-features)
-* [📦 Prerequisites](#-prerequisites)
-* [🔧 Setup](#-setup)
-* [⚡ Quick Usage](#-quick-usage)
-* [📚 User Dictionaries](#-user-dictionaries)
-* [📋 Example Commands](#-example-commands)
+* [Key Features](#key-features)
+* [Prerequisites](#prerequisites)
+* [Setup](#setup)
+* [Quick Usage](#quick-usage)
+* [User Dictionaries](#user-dictionaries)
+* [Example Commands](#example-commands)
   * [Dry‑run (no API calls)](#dryrun-no-api-calls)
   * [Cost and string limits](#cost-and-string-limits)
   * [Advanced options](#advanced-options)
   * [WordPress plugin](#wordpress-plugin)
   * [JSON output](#json-output)
-* [📖 CLI Options Reference](#-cli-options-reference)
-* [🌍 Supported Languages](#-supported-languages)
-* [⚙️ Configuration Files](#-configuration-files)
-* [📜 Available Scripts](#-available-scripts)
-* [🧪 A/B Testing for Prompt Optimization](#-ab-testing-for-prompt-optimization)
-* [🙏 Acknowledgments](#-acknowledgments)
+* [CLI Options Reference](#cli-options-reference)
+* [Supported Languages](#supported-languages)
+* [Configuration Files](#configuration-files)
+* [Available Scripts](#available-scripts)
+* [A/B Testing for Prompt Optimization](#ab-testing-for-prompt-optimization)
+* [Acknowledgments](#acknowledgments)
 
 ---
 
-## 🚀 Key Features
+## Key Features
 
-* **🤖 AI‑powered translations** – Translate into any language supported by OpenAI models.
-* **📦 Smart batch handling** – Tune batch size, concurrency and retries for the right balance of cost and speed.
-* **💰 Cost‑conscious execution** – Accurately estimate costs and tokens, and control the maximum cost of a job.
-* **🔄 Incremental & resumable workflows** – Resume interrupted jobs, merge with existing `.po` files, or force a re‑translation.
-* **📚 Custom dictionaries** – Supply term mappings for consistent brand and technical vocabulary.
-* **🌐 Plural‑forms support** – Automatic plural rules for languages that require different word forms based on quantity.
-* **🧪 Dry‑run mode** – Preview translations and cost without making API calls.
-* **📊 Detailed progress tracking** – Real‑time stats with four verbosity levels.
-* **📋 Flexible output** – Console or JSON, with optional raw API logs for debugging.
-* **⚙️ Everything is a flag** – Every knob exposed via CLI flags *and* env vars.
+* **AI‑powered translations** – Translate into any language supported by OpenAI models.
+* **Smart batch handling** – Tune batch size, concurrency and retries for the right balance of cost and speed.
+* **Cost‑conscious execution** – Accurately estimate costs and tokens, and control the maximum cost of a job.
+* **Incremental & resumable workflows** – Resume interrupted jobs, merge with existing `.po` files, or force a re‑translation.
+* **Custom dictionaries** – Supply term mappings for consistent brand and technical vocabulary.
+* **Plural‑forms support** – Automatic plural rules for languages that require different word forms based on quantity.
+* **Dry‑run mode** – Preview translations and cost without making API calls.
+* **Detailed progress tracking** – Real‑time stats with four verbosity levels.
+* **Flexible output** – Console or JSON, with optional raw API logs for debugging.
+* **Everything is a flag** – Every knob exposed via CLI flags *and* env vars.
 
 ---
 
-## 📦 Prerequisites
+## Prerequisites
 
 Before using **Potomatic**, you need a `.pot` file containing the source strings to translate.
 
@@ -89,7 +89,7 @@ These tools will scan your project and extract all translatable strings into a P
 
 ---
 
-## 🔧 Setup
+## Setup
 
 1. **Install dependencies**
 
@@ -121,7 +121,7 @@ npm run translate
 
 ---
 
-## ⚡ Quick Usage
+## Quick Usage
 
 ```bash
 # Translate French and Spanish using defaults (provider auto-detected from OPENAI_API_KEY)
@@ -137,7 +137,7 @@ export GEMINI_API_KEY=your-gemini-key
 
 ---
 
-## 📚 User Dictionaries
+## User Dictionaries
 
 Custom dictionaries are supported to maintain consistency in the translation of brand names, technical terms, domain-specific language, etc.
 
@@ -178,7 +178,7 @@ Using this example, "Block Editor" and other terms will not be translated to tar
 
 ---
 
-## 📋 Example Commands
+## Example Commands
 
 ### Dry‑run (no API calls)
 
@@ -236,7 +236,7 @@ Using this example, "Block Editor" and other terms will not be translated to tar
 
 ---
 
-## 📖 CLI Options Reference
+## CLI Options Reference
 
 ### Required Options
 
@@ -340,7 +340,7 @@ Using this example, "Block Editor" and other terms will not be translated to tar
 
 ---
 
-## 🌍 Supported Languages
+## Supported Languages
 
 **Potomatic** supports a wide range of languages (including regional variants) and accepts multiple input formats. You can specify target languages using any of the following formats:
 
@@ -377,7 +377,7 @@ For a full list of supported languages and their corresponding codes, see the [l
 
 ---
 
-## ⚙️ Configuration Files
+## Configuration Files
 
 **Potomatic** uses several configuration files in the `config/` directory to customize its behavior:
 
@@ -430,7 +430,7 @@ Contains pricing information for OpenAI models (as of May 2025) used for cost es
 
 ---
 
-## 📜 Available Scripts
+## Available Scripts
 
 ```bash
 npm run translate      # Main translation task
@@ -439,12 +439,12 @@ npm run ab-prompt-test # Prompt A/B tester
 
 ---
 
-## 🧪 A/B Testing for Prompt Optimization
+## A/B Testing for Prompt Optimization
 
 `npm run ab-prompt-test` (or `node tools/ab-prompt-test`) runs two prompt strategies side by side, reports cost, and highlights divergent translations so you can pick the winner.
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 Hat tip to [ryanhex53](https://github.com/ryanhex53) for the original [gpt-po](https://github.com/ryanhex53/gpt-po) that inspired this project.
