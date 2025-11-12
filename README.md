@@ -282,6 +282,13 @@ Using this example, "Block Editor" and other terms will not be translated to tar
 | `--dictionary-path <path>` | -     | Directory containing dictionary files for consistent translations | `./config/dictionaries` |
 | `--use-dictionary`       | -     | Use the dictionary system for consistent translations         | `false` |
 
+### Configuration Files
+
+| Option                              | Short | Description                                                                     | Default                  |
+| ----------------------------------- | ----- | ------------------------------------------------------------------------------- | ------------------------ |
+| `--prompt-file-path <path>`         | -     | Path to the prompt.md file containing translation instructions                 | `./config/prompt.md`     |
+| `--po-header-template-path <path>`  | -     | Path to the po-header.json file containing custom PO file headers              | `./config/po-header.json`|
+
 ### Performance & Concurrency
 
 | Option                  | Short | Description                                                                                                    | Default |
@@ -382,9 +389,13 @@ Used by default to locate [user dictionary](#-user-dictionaries) files. You can 
 
 Contains the system prompt sent to the AI provider for translation. You may consider modifying it to adjust translation style or add domain-specific instructions.
 
+You can override the default path using the `--prompt-file-path` CLI option or the `PROMPT_FILE_PATH` environment variable.
+
 ### `config/po-header.json`
 
 Defines custom headers for generated `.po` files. These headers contain metadata about the translation project.
+
+You can override the default path using the `--po-header-template-path` CLI option or the `PO_HEADER_TEMPLATE_PATH` environment variable.
 
 **How it works:**
 

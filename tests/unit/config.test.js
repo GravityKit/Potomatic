@@ -4,7 +4,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { z } from 'zod';
-import { validateConfiguration } from '../../src/config/index.js';
+import { validateConfiguration, createConfiguration } from '../../src/config/index.js';
 
 describe('Config Parsing', () => {
 	describe('booleanStringSchema', () => {
@@ -224,6 +224,28 @@ describe('Config Parsing', () => {
 				OPENAI_API_KEY: 'test-key-2'
 			});
 			expect(detected).toBe('gemini');
+		});
+	});
+
+	describe('Custom Configuration File Paths', () => {
+		it('passes through custom prompt file path', () => {
+			const config = createConfiguration({
+				promptFilePath: './custom/prompt.md',
+				targetLanguages: ['fr_FR'],
+				potFilePath: './test.pot',
+			});
+
+			expect(config.promptFilePath).toBe('./custom/prompt.md');
+		});
+
+		it('passes through custom PO header template path', () => {
+			const config = createConfiguration({
+				poHeaderTemplatePath: './custom/header.json',
+				targetLanguages: ['fr_FR'],
+				potFilePath: './test.pot',
+			});
+
+			expect(config.poHeaderTemplatePath).toBe('./custom/header.json');
 		});
 	});
 });

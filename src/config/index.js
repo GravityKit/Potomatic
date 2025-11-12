@@ -91,6 +91,10 @@ const envSchema = z.object({
 	DICTIONARY_PATH: z.string().default('./config/dictionaries'),
 	USE_DICTIONARY: booleanStringSchema(false),
 
+	// Configuration file paths.
+	PROMPT_FILE_PATH: z.string().optional(),
+	PO_HEADER_TEMPLATE_PATH: z.string().optional(),
+
 	// Optional target languages and pot file (can set defaults.).
 	TARGET_LANGUAGES: z.string().optional(),
 	POT_FILE_PATH: z.string().optional(),
@@ -232,6 +236,8 @@ export const DEFAULTS = {
 	LOCALE_FORMAT: ENV_CONFIG.LOCALE_FORMAT,
 	DICTIONARY_PATH: ENV_CONFIG.DICTIONARY_PATH,
 	USE_DICTIONARY: ENV_CONFIG.USE_DICTIONARY,
+	PROMPT_FILE_PATH: ENV_CONFIG.PROMPT_FILE_PATH,
+	PO_HEADER_TEMPLATE_PATH: ENV_CONFIG.PO_HEADER_TEMPLATE_PATH,
 };
 
 /**
@@ -286,6 +292,10 @@ export function parseCliArguments() {
 		// === Dictionary Options ==.=
 		.option('--dictionary-path <path>', 'Directory containing translation dictionaries (default: ./config/dictionaries)', DEFAULTS.DICTIONARY_PATH)
 		.option('--use-dictionary', 'Use user dictionary for consistent term translation', DEFAULTS.USE_DICTIONARY)
+
+		// === Configuration File Paths ==.=
+		.option('--prompt-file-path <path>', 'Path to the prompt.md file containing translation instructions (default: ./config/prompt.md)', DEFAULTS.PROMPT_FILE_PATH)
+		.option('--po-header-template-path <path>', 'Path to the po-header.json file containing custom PO file headers (default: ./config/po-header.json)', DEFAULTS.PO_HEADER_TEMPLATE_PATH)
 
 		// === Performance Options ==.=
 		.option('-b, --batch-size <number>', 'Number of strings per translation batch (1-100). Larger batches reduce cost but increase risk of API failures.', (val) => Math.max(1, Math.min(100, parseInt(val, 10))), DEFAULTS.BATCH_SIZE)
@@ -459,5 +469,7 @@ export function createConfiguration(options) {
 		localeFormat: options.localeFormat || DEFAULTS.LOCALE_FORMAT,
 		dictionaryPath: options.dictionaryPath || DEFAULTS.DICTIONARY_PATH,
 		useDictionary: options.useDictionary || DEFAULTS.USE_DICTIONARY,
+		promptFilePath: options.promptFilePath || DEFAULTS.PROMPT_FILE_PATH,
+		poHeaderTemplatePath: options.poHeaderTemplatePath || DEFAULTS.PO_HEADER_TEMPLATE_PATH,
 	};
 }

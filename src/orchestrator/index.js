@@ -68,8 +68,8 @@ export class TranslationOrchestrator {
 			this.mainLogger.info(`Using .po file prefix: "${this.config.poFilePrefix}"`);
 		}
 
-		if (this.config.poHeaderTemplate) {
-			this.mainLogger.info(`Using PO header template: ${this.config.poHeaderTemplate}`);
+		if (this.config.poHeaderTemplatePath) {
+			this.mainLogger.info(`Using PO header template: ${this.config.poHeaderTemplatePath}`);
 		}
 
 		if (this.config.maxStringsTotal) {

@@ -583,7 +583,7 @@ export class LanguageProcessor {
 	async _processDryRunBatch(batch, batchNumber, totalBatches, language) {
 		this.logger.info(`[Batch ${batchNumber}/${totalBatches}] DRY RUN: Analyzing ${formatNumber(batch.length || 0)} strings for translation`);
 
-		const systemPrompt = buildSystemPrompt(language, this.config.sourceLanguage);
+		const systemPrompt = buildSystemPrompt(language, this.config.sourceLanguage, this.config.promptFilePath);
 		const costData = this._calculateDryRunCosts(batch, systemPrompt, language);
 
 		// Log dictionary usage if enabled.
@@ -865,7 +865,7 @@ export class LanguageProcessor {
 	 * @return {number} Estimated cost for the batch.
 	 */
 	_estimateBatchCost(batch, language) {
-		const systemPrompt = buildSystemPrompt(language, this.config.sourceLanguage);
+		const systemPrompt = buildSystemPrompt(language, this.config.sourceLanguage, this.config.promptFilePath);
 		const costData = this._calculateDryRunCosts(batch, systemPrompt, language);
 
 		return costData.estimatedCost;
@@ -1014,7 +1014,7 @@ export class LanguageProcessor {
 	 * @throws {Error} If file save operation fails.
 	 */
 	async _savePoFile(outputPoData, language, outputFile) {
-		const success = await compilePoFile(outputPoData, language, outputFile, this.logger, this.config.poHeaderTemplate);
+		const success = await compilePoFile(outputPoData, language, outputFile, this.logger, this.config.poHeaderTemplatePath);
 
 		if (!success) {
 			throw new Error(`Failed to save .po file: ${outputFile}`);
@@ -1040,7 +1040,7 @@ export class LanguageProcessor {
 	 * @return {Promise<Object>} Object containing batch result and translated items.
 	 */
 	async _processActualBatch(batch, language, batchNumber, totalBatches, progressCallback, processedStringsCount, totalStringsToTranslate, processStartTime) {
-		const systemPrompt = buildSystemPrompt(language, this.config.sourceLanguage);
+		const systemPrompt = buildSystemPrompt(language, this.config.sourceLanguage, this.config.promptFilePath);
 
 		// Calculate plural count for target language.
 		const pluralFormsString = getPluralForms(language, this.logger);
