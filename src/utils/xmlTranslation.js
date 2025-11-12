@@ -118,6 +118,9 @@ function validatePluralForms(forms, originalMsgid, expectedCount, itemId, logger
 	let hasIssues = false;
 	const issues = [];
 
+	// Find first non-empty form to use as fallback.
+	const fallbackForm = correctedForms.find(f => f && f.trim() !== '') || '';
+
 	// Ensure we have exactly the right number of forms.
 	if (correctedForms.length < expectedCount) {
 		hasIssues = true;
@@ -127,12 +130,12 @@ function validatePluralForms(forms, originalMsgid, expectedCount, itemId, logger
 		if (verbosityLevel >= 2) {
 			logger.warn(
 				`Insufficient plural forms at index ${itemId} for "${originalMsgid.substring(0, 50)}...": ` +
-				`Expected ${expectedCount}, got ${correctedForms.length}. Padding with empty strings.`
+				`Expected ${expectedCount}, got ${correctedForms.length}. Padding with first form as fallback.`
 			);
 		}
 
 		while (correctedForms.length < expectedCount) {
-			correctedForms.push('');
+			correctedForms.push(fallbackForm);
 		}
 	} else if (correctedForms.length > expectedCount) {
 		hasIssues = true;
@@ -164,9 +167,12 @@ function validatePluralForms(forms, originalMsgid, expectedCount, itemId, logger
 		if (verbosityLevel >= 2) {
 			logger.warn(
 				`Incomplete plural forms at index ${itemId} for "${originalMsgid.substring(0, 50)}...": ` +
-				`Forms at indices [${emptyIndices.join(', ')}] are empty.`
+				`Forms at indices [${emptyIndices.join(', ')}] are empty. Filling with first form as fallback.`
 			);
 		}
+
+		// Fill empty forms with the first non-empty form as fallback.
+		correctedForms = correctedForms.map(f => (f && f.trim() !== '') ? f : fallbackForm);
 	}
 
 	if (hasIssues && verbosityLevel >= 3) {
