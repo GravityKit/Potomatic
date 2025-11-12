@@ -21,6 +21,7 @@ For improved results, consider refining your prompt, using a higher-tier model, 
 ## 📋 Table of Contents
 
 * [🚀 Key Features](#-key-features)
+* [📦 Prerequisites](#-prerequisites)
 * [🔧 Setup](#-setup)
 * [⚡ Quick Usage](#-quick-usage)
 * [📚 User Dictionaries](#-user-dictionaries)
@@ -50,6 +51,40 @@ For improved results, consider refining your prompt, using a higher-tier model, 
 * **📊 Detailed progress tracking** – Real‑time stats with four verbosity levels.
 * **📋 Flexible output** – Console or JSON, with optional raw API logs for debugging.
 * **⚙️ Everything is a flag** – Every knob exposed via CLI flags *and* env vars.
+
+---
+
+## 📦 Prerequisites
+
+Before using **Potomatic**, you need a `.pot` file containing the source strings to translate.
+
+### Creating a POT file
+
+**For WordPress plugin/theme authors**: Use [WP-CLI's i18n command](https://developer.wordpress.org/cli/commands/i18n/make-pot/):
+
+```bash
+wp i18n make-pot /path/to/your-plugin /path/to/your-plugin/languages/your-plugin.pot
+```
+
+**For non-WordPress projects**: Use [gettext](https://www.gnu.org/software/gettext/) tools to extract strings from your source code:
+
+```bash
+# For Python projects (using _() or gettext() functions)
+xgettext --language=Python --keyword=_ --keyword=gettext --output=translations.pot *.py
+
+# For JavaScript/Node.js projects
+xgettext --language=JavaScript --keyword=_ --keyword=gettext --output=translations.pot *.js
+
+# For PHP projects (specify which functions to extract)
+xgettext --language=PHP --keyword=__ --keyword=_e --keyword=_n:1,2 --output=translations.pot *.php
+
+# For multiple file types in a directory
+find . -iname "*.php" -o -iname "*.js" -o -iname "*.py" | xgettext --files-from=- --output=translations.pot
+```
+
+**Note**: The `--keyword` option tells xgettext which function names to look for when extracting translatable strings. Common options include `_()`, `gettext()`, `__()`, `_e()`, and `_n()` depending on your framework.
+
+These tools will scan your project and extract all translatable strings into a POT file that **Potomatic** can then use to generate translations.
 
 ---
 
