@@ -2,13 +2,13 @@
  * Validation statistics utilities.
  * Centralized validation type definitions and helper functions.
  *
- * @since TBD
+ * @since 1.1.0
  */
 
 /**
  * Registry of all validation types with their display names.
  *
- * @since TBD
+ * @since 1.1.0
  */
 export const VALIDATION_TYPES = {
 	stringsWithPluralIssues: 'strings with plural issues',
@@ -17,7 +17,7 @@ export const VALIDATION_TYPES = {
 /**
  * Creates an empty validation statistics object with all validation types initialized to 0.
  *
- * @since TBD
+ * @since 1.1.0
  *
  * @return {Object} Empty validation stats object.
  */
@@ -34,7 +34,7 @@ export function createEmptyValidationStats() {
 /**
  * Calculates the total number of validation issues.
  *
- * @since TBD
+ * @since 1.1.0
  *
  * @param {Object} validationStats - Validation statistics object.
  *
@@ -57,7 +57,7 @@ export function getTotalValidationIssues(validationStats) {
 /**
  * Formats validation stats as a human-readable breakdown string.
  *
- * @since TBD
+ * @since 1.1.0
  *
  * @param {Object} validationStats - Validation statistics object.
  *
@@ -83,7 +83,7 @@ export function formatValidationBreakdown(validationStats) {
 /**
  * Accumulates validation stats from a source object into a target object.
  *
- * @since TBD
+ * @since 1.1.0
  *
  * @param {Object} target - Target validation stats object to accumulate into.
  * @param {Object} source - Source validation stats object to accumulate from.

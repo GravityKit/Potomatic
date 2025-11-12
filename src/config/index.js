@@ -144,7 +144,7 @@ function parseEnvironmentConfig() {
  * Creates a Zod schema for parsing boolean values from strings (env vars and CLI args).
  * Handles common string representations: "true", "false", "1", "0".
  *
- * @since TBD
+ * @since 1.1.0
  *
  * @param {boolean} defaultValue - Default value if not provided or empty.
  *
@@ -163,7 +163,7 @@ function booleanStringSchema(defaultValue = false) {
  * Auto-detects provider from environment variable keys.
  * Checks for POTOMATIC_<PROVIDER>_API_KEY and <PROVIDER>_API_KEY patterns.
  *
- * @since TBD
+ * @since 1.1.0
  *
  * @return {string|null} Detected provider name (lowercase) or null if none detected.
  */

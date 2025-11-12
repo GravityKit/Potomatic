@@ -102,7 +102,7 @@ export function buildDictionaryResponse(dictionaryMatches) {
  * Validates plural form translations.
  * Ensures correct form count and warns about incomplete translations.
  *
- * @since TBD
+ * @since 1.1.0
  *
  * @param {Array<string>} forms - Array of translated forms.
  * @param {string} originalMsgid - Original msgid for logging context.

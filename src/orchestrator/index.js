@@ -799,7 +799,7 @@ export class TranslationOrchestrator {
 	 *
 	 * @private
 	 *
-	 * @since TBD
+	 * @since 1.1.0
 	 *
 	 * @param {string} language - Language code.
 	 * @param {Object} stats - Language processing statistics.
