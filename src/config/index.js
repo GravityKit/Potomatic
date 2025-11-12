@@ -49,7 +49,12 @@ const envSchema = z.object({
 	// Provider settings.
 	PROVIDER: z.string().default('openai'),
 
-	// Provider API key.
+	// API keys - 5-tier resolution: Potomatic-specific > standard provider > generic > fallback.
+	POTOMATIC_API_KEY: z.string().optional(),
+	POTOMATIC_OPENAI_API_KEY: z.string().optional(),
+	POTOMATIC_GEMINI_API_KEY: z.string().optional(),
+	OPENAI_API_KEY: z.string().optional(),
+	GEMINI_API_KEY: z.string().optional(),
 	API_KEY: z.string().optional(),
 
 	// Model settings.
@@ -150,8 +155,44 @@ function booleanStringSchema(defaultValue = false) {
 		.transform((val) => val === 'true' || val === '1');
 }
 
+/**
+ * Auto-detects provider from environment variable keys.
+ * Checks for POTOMATIC_<PROVIDER>_API_KEY and <PROVIDER>_API_KEY patterns.
+ *
+ * @since TBD
+ *
+ * @return {string|null} Detected provider name (lowercase) or null if none detected.
+ */
+function detectProviderFromEnv() {
+	const knownProviders = ['gemini', 'anthropic', 'cohere', 'openai'];
+
+	// Check POTOMATIC_<PROVIDER>_API_KEY first (higher priority).
+	for (const provider of knownProviders) {
+		const providerUpper = provider.toUpperCase();
+
+		if (process.env[`POTOMATIC_${providerUpper}_API_KEY`]) {
+			return provider;
+		}
+	}
+
+	// Check <PROVIDER>_API_KEY (standard keys).
+	for (const provider of knownProviders) {
+		const providerUpper = provider.toUpperCase();
+
+		if (process.env[`${providerUpper}_API_KEY`]) {
+			return provider;
+		}
+	}
+
+	return null;
+}
+
 // Parse environment configuration once at module load.
 const ENV_CONFIG = parseEnvironmentConfig();
+
+// Auto-detect provider from environment keys if not explicitly set.
+const DETECTED_PROVIDER = detectProviderFromEnv();
+const RESOLVED_PROVIDER = ENV_CONFIG.PROVIDER || DETECTED_PROVIDER || 'openai';
 
 /**
  * Default configuration constants.
@@ -159,7 +200,7 @@ const ENV_CONFIG = parseEnvironmentConfig();
  * @since 1.0.0
  */
 export const DEFAULTS = {
-	PROVIDER: ENV_CONFIG.PROVIDER,
+	PROVIDER: RESOLVED_PROVIDER,
 	BATCH_SIZE: ENV_CONFIG.BATCH_SIZE,
 	MODEL: ENV_CONFIG.MODEL,
 	VERBOSE_LEVEL: ENV_CONFIG.VERBOSE_LEVEL,
@@ -235,7 +276,8 @@ export function parseCliArguments() {
 		.option('--locale-format <format>', 'Format to use for locale codes in file names: `wp_locale` (ru_RU), `iso_639_1` (ru), `iso_639_2` (rus), or `target_lang` (default)', DEFAULTS.LOCALE_FORMAT)
 
 		// === Translation Options ==.=
-		.option('-k, --api-key <key>', 'OpenAI API key (overrides API_KEY env var)')
+		.option('--provider <provider>', 'AI provider (e.g., "openai", "gemini"). Auto-detected from API key if not specified.', DEFAULTS.PROVIDER)
+		.option('-k, --api-key <key>', 'Provider API key (overrides POTOMATIC_<PROVIDER>_API_KEY and POTOMATIC_API_KEY env vars)')
 		.option('-m, --model <model>', 'AI model name (e.g., "gpt-4o-mini")', DEFAULTS.MODEL)
 		.option('--temperature <number>', 'Creativity level (0.0-2.0); lower = more deterministic, higher = more creative', (val) => Math.max(0, Math.min(2, parseFloat(val))), DEFAULTS.TEMPERATURE)
 		.option('-F, --force-translate', 'Re-translate all strings, ignoring any existing translations', DEFAULTS.FORCE_TRANSLATE)
@@ -279,8 +321,14 @@ export function parseCliArguments() {
 	if (shouldShowHelp) {
 		displayBanner();
 
+		const provider = ENV_CONFIG.PROVIDER;
+		const providerUpper = provider.toUpperCase();
+		const potomacProviderKey = ENV_CONFIG[`POTOMATIC_${providerUpper}_API_KEY`];
+		const standardProviderKey = ENV_CONFIG[`${providerUpper}_API_KEY`];
+
 		const tempOptions = {
-			apiKey: ENV_CONFIG.API_KEY,
+			provider,
+			apiKey: potomacProviderKey || standardProviderKey || ENV_CONFIG.POTOMATIC_API_KEY || ENV_CONFIG.API_KEY,
 			targetLanguages: DEFAULTS.TARGET_LANGUAGES ? DEFAULTS.TARGET_LANGUAGES.split(',').map((lang) => lang.trim()) : [],
 			potFilePath: DEFAULTS.POT_FILE_PATH,
 			dryRun: false,
@@ -320,8 +368,16 @@ export function parseCliArguments() {
 export function validateConfiguration(options) {
 	const errors = [];
 
-	if (!options.dryRun && !options.apiKey && !process.env.API_KEY) {
-		errors.push('🔑 API key required (set API_KEY env var, use --api-key, or try --dry-run)');
+	// Check for API key with provider-aware messaging (5-tier resolution).
+	const provider = options.provider || DEFAULTS.PROVIDER;
+	const providerUpper = provider.toUpperCase();
+	const potomacProviderKey = process.env[`POTOMATIC_${providerUpper}_API_KEY`];
+	const standardProviderKey = process.env[`${providerUpper}_API_KEY`];
+	const hasApiKey = options.apiKey || potomacProviderKey || standardProviderKey || process.env.POTOMATIC_API_KEY || process.env.API_KEY;
+
+	if (!options.dryRun && !hasApiKey) {
+		const providerName = provider === 'openai' ? 'OpenAI' : provider === 'gemini' ? 'Gemini' : provider;
+		errors.push(`🔑 ${providerName} API key required. Set --api-key, ${providerUpper}_API_KEY, or POTOMATIC_API_KEY.`);
 	}
 
 	if (!options.targetLanguages || options.targetLanguages.length === 0) {
@@ -357,9 +413,17 @@ export function validateConfiguration(options) {
  * @return {Object} Complete configuration object ready for use.
  */
 export function createConfiguration(options) {
+	// 5-tier API key resolution chain.
+	const provider = options.provider || DEFAULTS.PROVIDER;
+	const providerUpper = provider.toUpperCase();
+	const potomacProviderKey = ENV_CONFIG[`POTOMATIC_${providerUpper}_API_KEY`];
+	const standardProviderKey = ENV_CONFIG[`${providerUpper}_API_KEY`];
+
+	const apiKey = options.apiKey || potomacProviderKey || standardProviderKey || ENV_CONFIG.POTOMATIC_API_KEY || ENV_CONFIG.API_KEY;
+
 	return {
-		provider: options.provider || DEFAULTS.PROVIDER,
-		apiKey: options.apiKey || ENV_CONFIG.API_KEY,
+		provider,
+		apiKey,
 		model: options.model || DEFAULTS.MODEL,
 
 		potFilePath: options.potFilePath || DEFAULTS.POT_FILE_PATH,

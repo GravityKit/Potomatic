@@ -67,7 +67,7 @@ export class OpenAIProvider extends Provider {
 		const errors = [];
 
 		if (!config.dryRun && !config.apiKey) {
-			errors.push('API key is required (set API_KEY or use --dry-run)');
+			errors.push('API key is required (set OPENAI_API_KEY, POTOMATIC_API_KEY, or use --dry-run)');
 		}
 
 		const supportedModels = this.getSupportedModels();

@@ -68,7 +68,7 @@ npm install
 cp .env.example
 
 # Or create manually with your settings
-echo "API_KEY=your-api-key-here" > .env
+echo "OPENAI_API_KEY=your-api-key-here" > .env
 echo "TARGET_LANGUAGES=fr_FR,es_ES" >> .env
 echo "POT_FILE_PATH=path/to/your/file.pot" >> .env
 ```
@@ -88,8 +88,12 @@ npm run translate
 ## ⚡ Quick Usage
 
 ```bash
-# Translate French and Spanish using defaults
-./potomatic -l fr_FR,es_ES -p translations.pot -k $API_KEY
+# Translate French and Spanish using defaults (provider auto-detected from OPENAI_API_KEY)
+./potomatic -l fr_FR,es_ES -p translations.pot -k $OPENAI_API_KEY
+
+# Use Gemini (provider auto-detected from GEMINI_API_KEY)
+export GEMINI_API_KEY=your-gemini-key
+./potomatic -l fr_FR,es_ES -p translations.pot
 
 # Preview only (no API calls, cost estimate shown)
 ./potomatic --dry-run -l fr_FR -p translations.pot
@@ -204,9 +208,17 @@ Using this example, "Block Editor" and other terms will not be translated to tar
 | -------------------------------- | ----- | --------------------------------------------------------------- | ------- |
 | `--target-languages <languages>` | `-l`  | Target locale codes, comma-separated (e.g., fr_FR, es_ES, de_DE) | -       |
 | `--pot-file-path <path>`         | `-p`  | Path to the input `.pot` file containing source strings         | -       |
-| `--api-key <key>`                | `-k`  | OpenAI API key (overrides `API_KEY` env var) | -       |
+| `--api-key <key>`                | `-k`  | Provider API key (5-tier precedence: CLI > `POTOMATIC_<PROVIDER>_API_KEY` > `<PROVIDER>_API_KEY` > `POTOMATIC_API_KEY` > `API_KEY`) | -       |
 
-### OpenAI Settings
+### Provider Settings
+
+| Option                | Short | Description                                                                                                                                           | Default  |
+| --------------------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| `--provider <name>`   | -     | AI provider (e.g., "openai", "gemini", "anthropic"). **Auto-detected from API key** if not specified (e.g., `GEMINI_API_KEY` → provider=gemini). | Auto-detected or `openai` |
+
+**Provider auto-detection precedence**: `--provider` flag > `PROVIDER` env var > auto-detected from key name > default (`openai`)
+
+### Model Settings
 
 | Option                     | Short | Description                                                                           | Default         |
 | -------------------------- | ----- | ------------------------------------------------------------------------------------- | --------------- |

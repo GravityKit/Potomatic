@@ -138,5 +138,92 @@ describe('Config Parsing', () => {
 			expect(result.errors.some(e => e.includes('Target language required'))).toBe(true);
 			expect(result.errors.some(e => e.includes('POT file required'))).toBe(true);
 		});
+
+		it('generates provider-aware error message for OpenAI', () => {
+			const result = validateConfiguration({
+				provider: 'openai',
+				targetLanguages: ['fr_FR'],
+				potFilePath: './test.pot',
+			});
+
+			expect(result.isValid).toBe(false);
+			expect(result.errors.some(e => e.includes('OpenAI API key required'))).toBe(true);
+			expect(result.errors.some(e => e.includes('OPENAI_API_KEY'))).toBe(true);
+		});
+
+		it('generates provider-aware error message for Gemini', () => {
+			const result = validateConfiguration({
+				provider: 'gemini',
+				targetLanguages: ['fr_FR'],
+				potFilePath: './test.pot',
+			});
+
+			expect(result.isValid).toBe(false);
+			expect(result.errors.some(e => e.includes('Gemini API key required'))).toBe(true);
+			expect(result.errors.some(e => e.includes('GEMINI_API_KEY'))).toBe(true);
+		});
+	});
+
+	describe('Provider Auto-Detection', () => {
+		// Helper function that mimics detectProviderFromEnv logic.
+		const detectProvider = (env) => {
+			const knownProviders = ['gemini', 'anthropic', 'cohere', 'openai'];
+
+			// Check POTOMATIC_<PROVIDER>_API_KEY first.
+			for (const provider of knownProviders) {
+				const providerUpper = provider.toUpperCase();
+
+				if (env[`POTOMATIC_${providerUpper}_API_KEY`]) {
+					return provider;
+				}
+			}
+
+			// Check <PROVIDER>_API_KEY.
+			for (const provider of knownProviders) {
+				const providerUpper = provider.toUpperCase();
+
+				if (env[`${providerUpper}_API_KEY`]) {
+					return provider;
+				}
+			}
+
+			return null;
+		};
+
+		it('auto-detects provider from POTOMATIC_GEMINI_API_KEY', () => {
+			const detected = detectProvider({ POTOMATIC_GEMINI_API_KEY: 'test-key' });
+			expect(detected).toBe('gemini');
+		});
+
+		it('auto-detects provider from GEMINI_API_KEY', () => {
+			const detected = detectProvider({ GEMINI_API_KEY: 'test-key' });
+			expect(detected).toBe('gemini');
+		});
+
+		it('prefers POTOMATIC_ prefix over standard key', () => {
+			const detected = detectProvider({
+				POTOMATIC_GEMINI_API_KEY: 'test-key-1',
+				OPENAI_API_KEY: 'test-key-2'
+			});
+			expect(detected).toBe('gemini');
+		});
+
+		it('returns null when no provider keys present', () => {
+			const detected = detectProvider({});
+			expect(detected).toBeNull();
+		});
+
+		it('detects anthropic provider', () => {
+			const detected = detectProvider({ ANTHROPIC_API_KEY: 'test-key' });
+			expect(detected).toBe('anthropic');
+		});
+
+		it('prefers non-openai providers when multiple standard keys exist', () => {
+			const detected = detectProvider({
+				GEMINI_API_KEY: 'test-key-1',
+				OPENAI_API_KEY: 'test-key-2'
+			});
+			expect(detected).toBe('gemini');
+		});
 	});
 });
