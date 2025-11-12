@@ -8,7 +8,7 @@ import { formatCost, formatNumber, formatDuration } from '../utils/costCalculati
 import { getFileNamingLocale, normalizeLanguageInput, getLanguageName } from '../utils/languageMapping.js';
 import { buildXmlPrompt, buildDictionaryResponse } from '../utils/xmlTranslation.js';
 import { loadDictionary, findDictionaryMatches } from '../utils/dictionaryUtils.js';
-import { createEmptyValidationStats, accumulateValidationStats, getTotalValidationIssues } from '../utils/validationStats.js';
+import { createEmptyValidationStats, accumulateValidationStats, getTotalValidationIssues, formatValidationBreakdown } from '../utils/validationStats.js';
 
 // Cost threshold for determining when to show budget-related skip messages.
 // When cost reaches 80% of remaining budget, we show explanatory messages.
