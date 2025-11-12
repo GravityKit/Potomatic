@@ -254,7 +254,7 @@ export function parseCliArguments() {
 
 	program
 		.version(packageJson.version)
-		// === Required Options (can be set via env vars) ==.=
+		// === Required Options (can be set via env vars) ===
 		.option(
 			'-l, --target-languages <languages>',
 			'Target locale codes, comma-separated (e.g., fr_FR, es_ES, de_DE)',
@@ -274,14 +274,14 @@ export function parseCliArguments() {
 		.option('-p, --pot-file-path <path>', 'Path to the input `.pot` file containing source strings', DEFAULTS.POT_FILE_PATH)
 		.option('-s, --source-language <lang>', 'Source language code (default: "en")', DEFAULTS.SOURCE_LANGUAGE)
 
-		// === Output Options ==.=
+		// === Output Options ===
 		.option('-o, --output-dir <path>', 'Directory to save generated `.po` files for each language', DEFAULTS.OUTPUT_DIR)
 		.option('--output-format <format>', 'Output format: `console` or `json` (default: console)', DEFAULTS.OUTPUT_FORMAT)
 		.option('--output-file <path>', 'Path to save JSON output (use stdout if not provided)', DEFAULTS.OUTPUT_FILE)
 		.option('--po-file-prefix <prefix>', 'Prefix for each output `.po` file (e.g., "app-" → "app-fr_FR.po")', DEFAULTS.PO_FILE_PREFIX)
 		.option('--locale-format <format>', 'Format to use for locale codes in file names: `wp_locale` (ru_RU), `iso_639_1` (ru), `iso_639_2` (rus), or `target_lang` (default)', DEFAULTS.LOCALE_FORMAT)
 
-		// === Translation Options ==.=
+		// === Translation Options ===
 		.option('--provider <provider>', 'AI provider (e.g., "openai", "gemini"). Auto-detected from API key if not specified.', DEFAULTS.PROVIDER)
 		.option('-k, --api-key <key>', 'Provider API key (overrides POTOMATIC_<PROVIDER>_API_KEY and POTOMATIC_API_KEY env vars)')
 		.option('-m, --model <model>', 'AI model name (e.g., "gpt-4o-mini")', DEFAULTS.MODEL)
@@ -289,15 +289,15 @@ export function parseCliArguments() {
 		.option('-F, --force-translate', 'Re-translate all strings, ignoring any existing translations', DEFAULTS.FORCE_TRANSLATE)
 		.option('--input-po-path <path>', 'Path to an existing `.po` file to use as a base for merging', DEFAULTS.INPUT_PO_PATH)
 
-		// === Dictionary Options ==.=
+		// === Dictionary Options ===
 		.option('--dictionary-path <path>', 'Directory containing translation dictionaries (default: ./config/dictionaries)', DEFAULTS.DICTIONARY_PATH)
 		.option('--use-dictionary', 'Use user dictionary for consistent term translation', DEFAULTS.USE_DICTIONARY)
 
-		// === Configuration File Paths ==.=
+		// === Configuration File Paths ===
 		.option('--prompt-file-path <path>', 'Path to the prompt.md file containing translation instructions (default: ./config/prompt.md)', DEFAULTS.PROMPT_FILE_PATH)
 		.option('--po-header-template-path <path>', 'Path to the po-header.json file containing custom PO file headers (default: ./config/po-header.json)', DEFAULTS.PO_HEADER_TEMPLATE_PATH)
 
-		// === Performance Options ==.=
+		// === Performance Options ===
 		.option('-b, --batch-size <number>', 'Number of strings per translation batch (1-100). Larger batches reduce cost but increase risk of API failures.', (val) => Math.max(1, Math.min(100, parseInt(val, 10))), DEFAULTS.BATCH_SIZE)
 		.option('-j, --jobs <number>', 'Maximum number of languages to translate in parallel (1-10)', (val) => Math.max(1, Math.min(10, parseInt(val, 10))), DEFAULTS.CONCURRENT_JOBS)
 		.option('--max-tokens <number>', 'Maximum completion tokens for AI responses (1-32768, auto-calculated if not set)', (val) => Math.max(1, Math.min(32768, parseInt(val, 10))), DEFAULTS.MAX_TOKENS)
@@ -305,14 +305,14 @@ export function parseCliArguments() {
 		.option('--max-total-strings <number>', 'Limit total number of strings translated across all languages (processed sequentially)', (val) => Math.max(1, parseInt(val, 10)), DEFAULTS.MAX_TOTAL_STRINGS)
 		.option('--max-cost <number>', 'Limit total estimated translation cost in USD', (val) => parseFloat(val), DEFAULTS.MAX_COST)
 
-		// === Reliability Options ==.=
+		// === Reliability Options ===
 		.option('--max-retries <number>', 'Number of retry attempts per batch (0-10)', (val) => Math.max(0, Math.min(10, parseInt(val, 10))), DEFAULTS.MAX_RETRIES)
 		.option('--retry-delay <number>', 'Delay between retry attempts in milliseconds (500-30000)', (val) => Math.max(500, Math.min(30000, parseInt(val, 10))), DEFAULTS.RETRY_DELAY)
 		.option('--abort-on-failure', 'Abort the entire translation run if any batch fails all retry attempts', DEFAULTS.ABORT_ON_FAILURE)
 		.option('--skip-language-on-failure', 'Skip current language on failure and continue with remaining languages', DEFAULTS.SKIP_LANGUAGE_ON_FAILURE)
 		.option('--timeout <number>', 'Timeout for API requests in seconds (10-300)', (val) => Math.max(10, Math.min(300, parseInt(val, 10))), DEFAULTS.TIMEOUT)
 
-		// === Debugging Options ==.=
+		// === Debugging Options ===
 		.addOption(
 			new Option('-v, --verbose-level <level>', 'Verbosity level: 0=errors, 1=normal, 2=verbose, 3=debug').default(DEFAULTS.VERBOSE_LEVEL.toString()).argParser((value) => {
 				const parsed = parseInt(value, 10);
