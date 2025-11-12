@@ -43,24 +43,29 @@ export function buildXmlPrompt(batch, targetLang, pluralCount, dictionaryMatches
 			const actualIndex = startIndex + index;
 			const attrs = [`i="${actualIndex}"`];
 
-			if (entry.extractedComments) attrs.push(`c="${escapeXmlAttribute(entry.extractedComments)}"`);
-
-			const tag = `<source ${attrs.join(' ')}>${escapeXmlAttribute(entry.msgid)}`;
-
-			if (entry.msgid_plural) {
-				return tag + `|${escapeXmlAttribute(entry.msgid_plural)}</source>`;
+			if (entry.extractedComments) {
+				attrs.push(`c="${escapeXmlAttribute(entry.extractedComments)}"`);
 			}
 
-			return tag + '</source>';
+			// For plural forms, use separate <singular> and <plural> tags.
+			if (entry.msgid_plural) {
+				return `<source ${attrs.join(' ')}>
+  <singular>${escapeXmlAttribute(entry.msgid)}</singular>
+  <plural>${escapeXmlAttribute(entry.msgid_plural)}</plural>
+</source>`;
+			}
+
+			// For singular forms, use simple format.
+			return `<source ${attrs.join(' ')}>${escapeXmlAttribute(entry.msgid)}</source>`;
 		})
 		.join('\n');
 
 	prompt += xmlTags + '\n\nRespond:\n';
 
 	if (hasPlurals) {
-		prompt += `Items with "|" need ${pluralCount} forms:\n\n`;
+		prompt += `For entries with <singular> and <plural> tags, provide ${pluralCount} translations:\n\n`;
 
-		const formTags = Array.from({ length: pluralCount }, (_, i) => `<f${i}>form${i}</f${i}>`).join('');
+		const formTags = Array.from({ length: pluralCount }, (_, i) => `<f${i}>translation for form ${i}</f${i}>`).join('');
 
 		prompt += `Format: <t i="N">${formTags}</t>\n`;
 	} else {
