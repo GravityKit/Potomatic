@@ -221,8 +221,9 @@ describe('OpenAI Provider with Dictionary Integration', () => {
 		const lastRequest = mockClient.getLastRequest();
 		const promptMessage = lastRequest.messages[1].content;
 		expect(promptMessage).toContain('<source i="1">item</source>');
-		expect(promptMessage).toContain('<source i="2">One item|%d items</source>');
-		expect(promptMessage).toContain('Items with "|" need 2 forms');
+		expect(promptMessage).toContain('<singular>One item</singular>');
+		expect(promptMessage).toContain('<plural>%d items</plural>');
+		expect(promptMessage).toContain('For entries with <singular> and <plural> tags, provide 2 translations');
 	});
 
 	it('should handle API errors gracefully with dictionary', async () => {

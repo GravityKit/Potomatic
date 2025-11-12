@@ -62,11 +62,11 @@ describe('Plural Forms Integration Tests', () => {
 
 		const result = provider._parseApiResponse(apiResponse, batch, 6);
 
-		expect(result).toHaveLength(1);
-		expect(result[0].msgid).toBe('You can only select %d item');
-		expect(result[0].msgstr).toHaveLength(6);
-		expect(result[0].msgstr[0]).toBe('يمكنك اختيار عنصر واحد فقط');
-		expect(result[0].msgstr[5]).toBe('يمكنك اختيار %d عنصر فقط');
+		expect(result.translations).toHaveLength(1);
+		expect(result.translations[0].msgid).toBe('You can only select %d item');
+		expect(result.translations[0].msgstr).toHaveLength(6);
+		expect(result.translations[0].msgstr[0]).toBe('يمكنك اختيار عنصر واحد فقط');
+		expect(result.translations[0].msgstr[5]).toBe('يمكنك اختيار %d عنصر فقط');
 	});
 
 	it('should parse Polish plural forms correctly', () => {
@@ -87,11 +87,11 @@ describe('Plural Forms Integration Tests', () => {
 
 		const result = provider._parseApiResponse(apiResponse, batch, 3);
 
-		expect(result).toHaveLength(1);
-		expect(result[0].msgid).toBe('You can only select %d item');
-		expect(result[0].msgstr).toHaveLength(3);
-		expect(result[0].msgstr[0]).toBe('Możesz wybrać tylko %d element');
-		expect(result[0].msgstr[2]).toBe('Możesz wybrać tylko %d elementów');
+		expect(result.translations).toHaveLength(1);
+		expect(result.translations[0].msgid).toBe('You can only select %d item');
+		expect(result.translations[0].msgstr).toHaveLength(3);
+		expect(result.translations[0].msgstr[0]).toBe('Możesz wybrać tylko %d element');
+		expect(result.translations[0].msgstr[2]).toBe('Możesz wybrać tylko %d elementów');
 	});
 
 	it('should parse Chinese singular form correctly', () => {
@@ -110,10 +110,10 @@ describe('Plural Forms Integration Tests', () => {
 
 		const result = provider._parseApiResponse(apiResponse, batch, 1);
 
-		expect(result).toHaveLength(1);
-		expect(result[0].msgid).toBe('You can only select %d item');
-		expect(result[0].msgstr).toHaveLength(1);
-		expect(result[0].msgstr[0]).toBe('您只能选择 %d 个项目');
+		expect(result.translations).toHaveLength(1);
+		expect(result.translations[0].msgid).toBe('You can only select %d item');
+		expect(result.translations[0].msgstr).toHaveLength(1);
+		expect(result.translations[0].msgstr[0]).toBe('您只能选择 %d 个项目');
 	});
 
 	it('should replace placeholder headers with proper plural forms', async () => {

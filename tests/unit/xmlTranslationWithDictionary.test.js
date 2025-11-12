@@ -57,8 +57,9 @@ describe('XML Translation with Dictionary', () => {
 			const result = buildXmlPrompt(batch, 'fr_FR', 2, dictionaryMatches);
 
 			expect(result.xmlPrompt).toContain('<source i="1">item</source>');
-			expect(result.xmlPrompt).toContain('<source i="2">One item|%d items</source>');
-			expect(result.xmlPrompt).toContain('Items with "|" need 2 forms');
+			expect(result.xmlPrompt).toContain('<singular>One item</singular>');
+			expect(result.xmlPrompt).toContain('<plural>%d items</plural>');
+			expect(result.xmlPrompt).toContain('For entries with <singular> and <plural> tags, provide 2 translations');
 		});
 
 		it('should escape XML in dictionary terms', () => {
@@ -112,7 +113,7 @@ describe('XML Translation with Dictionary', () => {
 
 			const result = parseXmlResponse(xmlResponse, batch, 1, mockLogger, 0);
 
-			expect(result).toEqual([
+			expect(result.translations).toEqual([
 				{ msgid: 'Hello', msgstr: ['Bonjour'] },
 				{ msgid: 'Goodbye', msgstr: ['Au revoir'] },
 			]);
@@ -132,7 +133,7 @@ describe('XML Translation with Dictionary', () => {
 			const result = parseXmlResponse(xmlResponse, batch, 1, mockLogger, 2);
 
 			// Should only use indices 3-4 for actual translations
-			expect(result).toEqual([
+			expect(result.translations).toEqual([
 				{ msgid: 'Hello World', msgstr: ['Bonjour le monde'] },
 				{ msgid: 'Save changes', msgstr: ['Enregistrer les modifications'] },
 			]);
@@ -148,7 +149,7 @@ describe('XML Translation with Dictionary', () => {
 
 			const result = parseXmlResponse(xmlResponse, batch, 2, mockLogger, 1);
 
-			expect(result).toEqual([{ msgid: 'One item', msgstr: ['Un élément', '%d éléments'] }]);
+			expect(result.translations).toEqual([{ msgid: 'One item', msgstr: ['Un élément', '%d éléments'] }]);
 		});
 
 		it('should handle missing dictionary responses gracefully', () => {
@@ -159,7 +160,7 @@ describe('XML Translation with Dictionary', () => {
 
 			const result = parseXmlResponse(xmlResponse, batch, 1, mockLogger, 1);
 
-			expect(result).toEqual([{ msgid: 'Hello', msgstr: ['Bonjour'] }]);
+			expect(result.translations).toEqual([{ msgid: 'Hello', msgstr: ['Bonjour'] }]);
 		});
 
 		it('should handle mixed response with some missing translations', () => {
@@ -174,7 +175,7 @@ describe('XML Translation with Dictionary', () => {
 
 			const result = parseXmlResponse(xmlResponse, batch, 1, mockLogger, 1);
 
-			expect(result).toEqual([
+			expect(result.translations).toEqual([
 				{ msgid: 'First', msgstr: ['Premier message'] },
 				{ msgid: 'Second', msgstr: [''] }, // Missing
 				{ msgid: 'Third', msgstr: ['Troisième message'] },
@@ -198,7 +199,7 @@ describe('XML Translation with Dictionary', () => {
 
 			expect(warnings).toHaveLength(1);
 			expect(warnings[0]).toContain('Invalid batch index');
-			expect(result).toEqual([{ msgid: 'Test', msgstr: [''] }]);
+			expect(result.translations).toEqual([{ msgid: 'Test', msgstr: [''] }]);
 		});
 	});
 
@@ -232,7 +233,7 @@ describe('XML Translation with Dictionary', () => {
 
 			const parsed = parseXmlResponse(aiResponse, batch, 1, mockLogger, 2);
 
-			expect(parsed).toEqual([
+			expect(parsed.translations).toEqual([
 				{ msgid: 'Login to dashboard', msgstr: ['Se connecter au tableau de bord'] },
 				{ msgid: 'User settings panel', msgstr: ['Panneau des paramètres utilisateur'] },
 			]);
