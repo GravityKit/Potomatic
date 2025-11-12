@@ -5,6 +5,8 @@
  * @since 1.0.0
  */
 
+import { createEmptyValidationStats, accumulateValidationStats, VALIDATION_TYPES, getTotalValidationIssues } from './validationStats.js';
+
 /**
  * Calculates aggregate totals from an array of language statistics.
  * This is the single source of truth for cost and token aggregation.
@@ -166,6 +168,32 @@ export function createSummary(allLanguageStats) {
 	const totalSkippedDueToBudget = allLanguageStats.reduce((sum, stat) => sum + (stat.skippedDueToBudget || 0), 0);
 	const totalSkippedDueToLimits = allLanguageStats.reduce((sum, stat) => sum + (stat.skippedDueToLimits || 0), 0);
 
+	// Aggregate validation stats across all languages.
+	const totalValidationStats = createEmptyValidationStats();
+
+	for (const stat of allLanguageStats) {
+		if (stat.validationStats) {
+			accumulateValidationStats(totalValidationStats, stat.validationStats);
+		}
+	}
+
+	// Convert validation stats to snake_case for JSON consistency.
+	const totalValidationFormatted = {};
+
+	for (const key of Object.keys(VALIDATION_TYPES)) {
+		const snakeKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
+
+		totalValidationFormatted[snakeKey] = totalValidationStats[key];
+	}
+
+	// Calculate total warnings count.
+	const totalWarnings = getTotalValidationIssues(totalValidationStats);
+
+	// Count languages with warnings.
+	const languagesWithWarnings = allLanguageStats.filter((stat) => {
+		return stat.validationStats && getTotalValidationIssues(stat.validationStats) > 0;
+	}).length;
+
 	// Collect all errors from individual jobs.
 	const errors = allLanguageStats
 		.filter((stat) => stat.error)
@@ -179,6 +207,7 @@ export function createSummary(allLanguageStats) {
 		languages_processed: totals.languagesProcessed + totals.languagesWithErrors,
 		languages_successful: totals.languagesProcessed,
 		languages_failed: totals.languagesWithErrors,
+		languages_with_warnings: languagesWithWarnings,
 		total_cost: totals.totalCost,
 		total_tokens: totals.totalTokens,
 		total_prompt_tokens: totals.totalPromptTokens,
@@ -190,7 +219,9 @@ export function createSummary(allLanguageStats) {
 			skipped_due_to_budget: totalSkippedDueToBudget,
 			skipped_due_to_limits: totalSkippedDueToLimits,
 			failed: totals.totalFailed,
+			warnings: totalWarnings,
 		},
+		total_validation: totalValidationFormatted,
 		methods_used: totals.methods,
 		models_used: totals.models,
 		is_dry_run: totals.isDryRun,

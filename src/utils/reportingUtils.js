@@ -1,5 +1,6 @@
 import { getStyledColor, getBoldColor } from './colorUtils.js';
 import { calculateAggregateTotals, formatCost, getCostLabel, formatNumber, formatDuration } from './costCalculations.js';
+import { getTotalValidationIssues } from './validationStats.js';
 
 /**
  * Creates a logger with configurable verbosity levels.
@@ -178,8 +179,22 @@ export function printTranslationRunSummary(allLanguageStats, logger, effectiveCh
 	}
 	const totalExecutionTimeFormatted = formatDuration(totalExecutionTimeMs);
 
+	// Count languages with warnings.
+	const languagesWithWarnings = allLanguageStats.filter((stat) => {
+		return stat.validationStats && getTotalValidationIssues(stat.validationStats) > 0;
+	}).length;
+
 	// Print overall results.
-	logger.info(`Languages processed: ${getStyledColor('success')(totals.languagesProcessed)} | With errors: ${getStyledColor('error')(totals.languagesWithErrors)}`, 0);
+	const summaryParts = [
+		`Languages processed: ${getStyledColor('success')(totals.languagesProcessed)}`,
+		`With errors: ${getStyledColor('error')(totals.languagesWithErrors)}`,
+	];
+
+	if (languagesWithWarnings > 0) {
+		summaryParts.push(`With warnings: ${getStyledColor('warning')(languagesWithWarnings)}`);
+	}
+
+	logger.info(summaryParts.join(' | '), 0);
 
 	const resultParts = [];
 

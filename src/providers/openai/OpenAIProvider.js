@@ -375,6 +375,12 @@ export class OpenAIProvider extends Provider {
 				messages,
 				batchSize: batch.length,
 			},
+			validationStats: {
+				missingPluralForms: 0,
+				insufficientForms: 0,
+				excessForms: 0,
+				incompleteForms: 0,
+			},
 		};
 	}
 
@@ -444,7 +450,7 @@ export class OpenAIProvider extends Provider {
 				}
 
 				// Parse response.
-				const translations = this._parseApiResponse(response.choices[0].message.content, batch, pluralCount, dictionaryCount);
+				const { translations, validationStats } = this._parseApiResponse(response.choices[0].message.content, batch, pluralCount, dictionaryCount);
 
 				// Debug: Log parsed translations at verbose level.3.
 				this.logger.debug('=== PARSED TRANSLATIONS ===');
@@ -471,6 +477,7 @@ export class OpenAIProvider extends Provider {
 						response: response.choices[0].message.content,
 					},
 					dictionaryCount,
+					validationStats,
 				};
 			} catch (error) {
 				lastError = error;
@@ -616,21 +623,41 @@ export class OpenAIProvider extends Provider {
 	 * @param {number} pluralCount - Number of plural forms for target language.
 	 * @param {number} dictionaryCount - Number of dictionary entries to skip.
 	 *
-	 * @return {Array} Parsed translations.
+	 * @return {Object} Object with translations array and validationStats.
 	 *
 	 * @private
 	 */
 	_parseApiResponse(responseContent, batch, pluralCount, dictionaryCount = 0) {
 		try {
-			return parseXmlResponse(responseContent, batch, pluralCount, this.logger, dictionaryCount);
+			const verbosityLevel = this.config.verboseLevel || 1;
+			const { translations, validationStats } = parseXmlResponse(
+				responseContent,
+				batch,
+				pluralCount,
+				this.logger,
+				dictionaryCount,
+				verbosityLevel
+			);
+
+			return { translations, validationStats };
 		} catch (error) {
-			this.logger.warn(`Failed to parse API response: ${error.message}`);
+			if ((this.config.verboseLevel || 1) >= 2) {
+				this.logger.warn(`Failed to parse API response: ${error.message}`);
+			}
 
 			// Return empty translations as fallback.
-			return batch.map((item) => ({
-				msgid: item.msgid,
-				msgstr: Array(pluralCount).fill(''),
-			}));
+			return {
+				translations: batch.map((item) => ({
+					msgid: item.msgid,
+					msgstr: Array(pluralCount).fill(''),
+				})),
+				validationStats: {
+					missingPluralForms: 0,
+					insufficientForms: 0,
+					excessForms: 0,
+					incompleteForms: 0,
+				},
+			};
 		}
 	}
 
