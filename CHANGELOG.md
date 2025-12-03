@@ -1,5 +1,12 @@
 # Changelog
 
+
+## Develop
+
+### Fixed
+
+* Output directory was not being created when saving .po files if it didn't exist.
+
 ## 1.1.0 — 2025-11-12
 
 ### Fixed

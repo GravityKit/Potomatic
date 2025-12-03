@@ -1,4 +1,5 @@
 import fs from 'fs';
+import path from 'path';
 import gettextParser from 'gettext-parser';
 import { getPoHeaderLocale } from './languageMapping.js';
 
@@ -270,6 +271,11 @@ export async function compilePoFile(parsedPot, targetLang, outputFilePath, logge
 
 	try {
 		const outputContent = gettextParser.po.compile(compiledPoData);
+		const outputDir = path.dirname(outputFilePath);
+
+		if (!fs.existsSync(outputDir)) {
+			fs.mkdirSync(outputDir, { recursive: true });
+		}
 
 		fs.writeFileSync(outputFilePath, outputContent);
 
