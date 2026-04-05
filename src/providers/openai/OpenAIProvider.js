@@ -7,7 +7,7 @@ import { loadDictionary, findDictionaryMatches } from '../../utils/dictionaryUti
 /**
  * OpenAI Provider Implementation.
  *
- * Handles translation using OpenAI's language models (GPT-3.5, GPT-4, etc.).
+ * Handles translation using OpenAI's language models (GPT-5, GPT-5.4, etc.).
  * Implements the Provider interface with OpenAI-specific functionality.
  *
  * @since 1.0.0
@@ -213,7 +213,7 @@ export class OpenAIProvider extends Provider {
 	 *
 	 * @return {number} Token count.
 	 */
-	getTokenCount(text, model = 'gpt-3.5-turbo') {
+	getTokenCount(text, model = 'gpt-4.1-mini') {
 		if (!text || typeof text !== 'string') {
 			return 0;
 		}
@@ -246,7 +246,7 @@ export class OpenAIProvider extends Provider {
 			return Object.keys(this.providerPricing.models).sort();
 		}
 
-		return ['gpt-3.5-turbo', 'gpt-4', 'gpt-4o', 'gpt-4o-mini'];
+		return ['gpt-5-nano', 'gpt-5-mini', 'gpt-5', 'gpt-5.1', 'gpt-5.2', 'gpt-5.4-nano', 'gpt-5.4-mini', 'gpt-5.4', 'gpt-4.1-nano', 'gpt-4.1-mini', 'gpt-4.1'];
 	}
 
 	/**
@@ -260,7 +260,7 @@ export class OpenAIProvider extends Provider {
 	 */
 	getModelPricing(model) {
 		if (!this.providerPricing) {
-			return { prompt: 0.0005, completion: 0.0015 };
+			return { prompt: 0.0004, completion: 0.0016 };
 		}
 
 		return this.providerPricing.models[model] || this.providerPricing.fallback;
@@ -305,12 +305,12 @@ export class OpenAIProvider extends Provider {
 	_getFallbackPricing() {
 		return {
 			models: {
-				'gpt-3.5-turbo': { prompt: 0.0005, completion: 0.0015 },
-				'gpt-4': { prompt: 0.03, completion: 0.06 },
-				'gpt-4o': { prompt: 0.0025, completion: 0.01 },
-				'gpt-4o-mini': { prompt: 0.00015, completion: 0.0006 },
+				'gpt-5-nano': { prompt: 0.00005, completion: 0.0004 },
+				'gpt-5-mini': { prompt: 0.00025, completion: 0.002 },
+				'gpt-5': { prompt: 0.00125, completion: 0.01 },
+				'gpt-5.4': { prompt: 0.0025, completion: 0.015 },
 			},
-			fallback: { prompt: 0.0005, completion: 0.0015 },
+			fallback: { prompt: 0.0004, completion: 0.0016 },
 		};
 	}
 

@@ -58,7 +58,7 @@ const envSchema = z.object({
 	API_KEY: z.string().optional(),
 
 	// Model settings.
-	MODEL: z.string().default('gpt-4o-mini'),
+	MODEL: z.string().default('gpt-4.1-mini'),
 
 	// Performance settings.
 	BATCH_SIZE: z.coerce.number().int().min(1).max(100).default(20),
@@ -284,7 +284,7 @@ export function parseCliArguments() {
 		// === Translation Options ===
 		.option('--provider <provider>', 'AI provider (e.g., "openai", "gemini"). Auto-detected from API key if not specified.', DEFAULTS.PROVIDER)
 		.option('-k, --api-key <key>', 'Provider API key (overrides POTOMATIC_<PROVIDER>_API_KEY and POTOMATIC_API_KEY env vars)')
-		.option('-m, --model <model>', 'AI model name (e.g., "gpt-4o-mini")', DEFAULTS.MODEL)
+		.option('-m, --model <model>', 'AI model name (e.g., "gpt-4.1-mini")', DEFAULTS.MODEL)
 		.option('--temperature <number>', 'Creativity level (0.0-2.0); lower = more deterministic, higher = more creative', (val) => Math.max(0, Math.min(2, parseFloat(val))), DEFAULTS.TEMPERATURE)
 		.option('-F, --force-translate', 'Re-translate all strings, ignoring any existing translations', DEFAULTS.FORCE_TRANSLATE)
 		.option('--input-po-path <path>', 'Path to an existing `.po` file to use as a base for merging', DEFAULTS.INPUT_PO_PATH)

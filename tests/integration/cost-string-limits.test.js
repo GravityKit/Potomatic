@@ -18,7 +18,7 @@ describe('Cost and String Limits Integration Tests', () => {
 		config = {
 			provider: 'openai',
 			apiKey: 'test-api-key',
-			model: 'gpt-3.5-turbo',
+			model: 'gpt-4.1-mini',
 			temperature: 0.1,
 			timeout: 60,
 			batchSize: 3,

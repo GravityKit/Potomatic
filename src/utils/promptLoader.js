@@ -74,11 +74,11 @@ export function buildSystemPrompt(targetLang, sourceLang = 'English', promptFile
  * @since 1.0.0
  *
  * @param {string} prompt - The prompt text.
- * @param {string} model  - The model to get encoding for (default: 'gpt-3.5-turbo').
+ * @param {string} model  - The model to get encoding for (default: 'gpt-4.1-mini').
  *
  * @return {number} Exact token count.
  */
-export function getPromptTokenCount(prompt, model = 'gpt-3.5-turbo') {
+export function getPromptTokenCount(prompt, model = 'gpt-4.1-mini') {
 	if (!prompt || typeof prompt !== 'string') {
 		return 0;
 	}

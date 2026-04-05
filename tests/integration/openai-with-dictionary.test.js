@@ -27,7 +27,7 @@ describe('OpenAI Provider with Dictionary Integration', () => {
 		};
 
 		const config = {
-			model: 'gpt-4o-mini',
+			model: 'gpt-4.1-mini',
 			temperature: 0.7,
 			useDictionary: true,
 			dictionaryPath: tempDictDir,
@@ -48,7 +48,7 @@ describe('OpenAI Provider with Dictionary Integration', () => {
 		const translations = ['Bonjour', 'Au revoir'];
 		mockClient.queueResponse(createSuccessResponse(translations));
 
-		const result = await provider.translateBatch(batch, 'fr_FR', 'gpt-4o-mini', 'Translate to French', 3, 1000, 60, false, null, null, 1);
+		const result = await provider.translateBatch(batch, 'fr_FR', 'gpt-4.1-mini', 'Translate to French', 3, 1000, 60, false, null, null, 1);
 
 		expect(result.success).toBe(true);
 		expect(result.translations).toHaveLength(2);
@@ -87,7 +87,7 @@ describe('OpenAI Provider with Dictionary Integration', () => {
 			usage: { prompt_tokens: 200, completion_tokens: 120, total_tokens: 320 },
 		});
 
-		const result = await provider.translateBatch(batch, 'fr_FR', 'gpt-4o-mini', 'Translate to French', 3, 1000, 60, false, null, null, 1);
+		const result = await provider.translateBatch(batch, 'fr_FR', 'gpt-4.1-mini', 'Translate to French', 3, 1000, 60, false, null, null, 1);
 
 		expect(result.success).toBe(true);
 		expect(result.translations).toHaveLength(3);
@@ -125,7 +125,7 @@ describe('OpenAI Provider with Dictionary Integration', () => {
 		const result = await provider.translateBatch(
 			batch,
 			'fr_FR',
-			'gpt-4o-mini',
+			'gpt-4.1-mini',
 			'Translate to French',
 			3,
 			1000,
@@ -157,7 +157,7 @@ describe('OpenAI Provider with Dictionary Integration', () => {
 
 		mockClient.queueResponse(createSuccessResponse(['Expected response']));
 
-		await provider.translateBatch(batch, 'fr_CA', 'gpt-4o-mini', 'Translate to French', 3, 1000, 60, false, null, null, 1);
+		await provider.translateBatch(batch, 'fr_CA', 'gpt-4.1-mini', 'Translate to French', 3, 1000, 60, false, null, null, 1);
 
 		// Should use the specific CA dictionary
 		const lastRequest = mockClient.getLastRequest();
@@ -175,7 +175,7 @@ describe('OpenAI Provider with Dictionary Integration', () => {
 		const batch = [{ msgid: 'Hello' }];
 		mockClient.queueResponse(createSuccessResponse(['Bonjour']));
 
-		const result = await provider.translateBatch(batch, 'fr_FR', 'gpt-4o-mini', 'Translate to French', 3, 1000, 60, false, null, null, 1);
+		const result = await provider.translateBatch(batch, 'fr_FR', 'gpt-4.1-mini', 'Translate to French', 3, 1000, 60, false, null, null, 1);
 
 		expect(result.success).toBe(true);
 
@@ -203,7 +203,7 @@ describe('OpenAI Provider with Dictionary Integration', () => {
 		const result = await provider.translateBatch(
 			batch,
 			'fr_FR',
-			'gpt-4o-mini',
+			'gpt-4.1-mini',
 			'Translate to French',
 			3,
 			1000,
@@ -239,7 +239,7 @@ describe('OpenAI Provider with Dictionary Integration', () => {
 		const result = await provider.translateBatch(
 			batch,
 			'fr_FR',
-			'gpt-4o-mini',
+			'gpt-4.1-mini',
 			'Translate to French',
 			0, // No retries
 			1000,

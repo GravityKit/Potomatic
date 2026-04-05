@@ -29,7 +29,7 @@ describe('Plural Forms Integration Tests', () => {
 		const config = {
 			apiKey: 'test-key',
 			baseURL: 'https://api.openai.com/v1',
-			model: 'gpt-3.5-turbo',
+			model: 'gpt-4.1-mini',
 		};
 		provider = new OpenAIProvider(config, logger);
 	});

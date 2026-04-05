@@ -18,7 +18,7 @@ describe('API Integration Tests', () => {
 		testConfig = {
 			...config,
 			dryRun: true,
-			model: 'gpt-3.5-turbo',
+			model: 'gpt-4.1-mini',
 			apiKey: 'test-key',
 		};
 		provider = new OpenAIProvider(testConfig, mockLogger);
@@ -28,7 +28,7 @@ describe('API Integration Tests', () => {
 	it('should handle dry run translation', async () => {
 		const batch = [{ index: 0, msgid: 'Hello', msgstr: '', context: '' }];
 
-		const result = await provider.translateBatch(batch, 'es', 'gpt-3.5-turbo', 'Translate to Spanish', 3, 1000, 30000, true);
+		const result = await provider.translateBatch(batch, 'es', 'gpt-4.1-mini', 'Translate to Spanish', 3, 1000, 30000, true);
 
 		expect(result.success).toBe(true);
 		expect(result.translations).toHaveLength(1);
@@ -37,7 +37,7 @@ describe('API Integration Tests', () => {
 			msgstr: ['[DRY RUN] Hello'],
 		});
 		expect(result.cost.totalCost).toBeGreaterThan(0);
-		expect(result.cost.model).toBe('gpt-3.5-turbo');
+		expect(result.cost.model).toBe('gpt-4.1-mini');
 	});
 
 	it('should handle batch with multiple entries in dry run', async () => {
@@ -47,7 +47,7 @@ describe('API Integration Tests', () => {
 			{ index: 2, msgid: 'Thank you', msgstr: '', context: '' },
 		];
 
-		const result = await provider.translateBatch(batch, 'fr', 'gpt-3.5-turbo', 'Translate to French', 3, 1000, 30000, true);
+		const result = await provider.translateBatch(batch, 'fr', 'gpt-4.1-mini', 'Translate to French', 3, 1000, 30000, true);
 
 		expect(result.success).toBe(true);
 		expect(result.translations).toHaveLength(3);
@@ -55,7 +55,7 @@ describe('API Integration Tests', () => {
 		expect(result.translations[1].msgstr).toEqual(['[DRY RUN] Goodbye']);
 		expect(result.translations[2].msgstr).toEqual(['[DRY RUN] Thank you']);
 		expect(result.cost.totalCost).toBeGreaterThan(0);
-		expect(result.cost.model).toBe('gpt-3.5-turbo');
+		expect(result.cost.model).toBe('gpt-4.1-mini');
 	});
 
 	it('should calculate costs correctly', async () => {
@@ -65,12 +65,12 @@ describe('API Integration Tests', () => {
 			total_tokens: 150,
 		};
 
-		const cost = provider.calculateCost(usage, 'gpt-3.5-turbo');
+		const cost = provider.calculateCost(usage, 'gpt-4.1-mini');
 
-		// gpt-3.5-turbo pricing: prompt $0.0005/1K, completion $0.0015/1K
-		const expectedPromptCost = (100 / 1000) * 0.0005; // 0.00005
-		const expectedCompletionCost = (50 / 1000) * 0.0015; // 0.000075
-		const expectedTotalCost = expectedPromptCost + expectedCompletionCost; // 0.000125
+		// gpt-4.1-mini pricing: prompt $0.0004/1K, completion $0.0016/1K
+		const expectedPromptCost = (100 / 1000) * 0.0004;
+		const expectedCompletionCost = (50 / 1000) * 0.0016;
+		const expectedTotalCost = expectedPromptCost + expectedCompletionCost;
 
 		expect(cost.promptTokens).toBe(100);
 		expect(cost.completionTokens).toBe(50);
@@ -78,14 +78,14 @@ describe('API Integration Tests', () => {
 		expect(cost.promptCost).toBeCloseTo(expectedPromptCost, 8);
 		expect(cost.completionCost).toBeCloseTo(expectedCompletionCost, 8);
 		expect(cost.totalCost).toBeCloseTo(expectedTotalCost, 8);
-		expect(cost.model).toBe('gpt-3.5-turbo');
+		expect(cost.model).toBe('gpt-4.1-mini');
 	});
 
 	it('should get token count for text', () => {
 		const text = 'Hello world, this is a test message.';
-		const tokenCount = provider.getTokenCount(text, 'gpt-3.5-turbo');
+		const tokenCount = provider.getTokenCount(text, 'gpt-4.1-mini');
 
-		// This specific text tokenizes to exactly 9 tokens in gpt-3.5-turbo
+		// This specific text tokenizes to exactly 9 tokens in gpt-4.1-mini
 		expect(tokenCount).toBe(9);
 		expect(typeof tokenCount).toBe('number');
 	});
@@ -93,7 +93,7 @@ describe('API Integration Tests', () => {
 	it('should validate config correctly', () => {
 		const validConfig = {
 			apiKey: 'test-key',
-			model: 'gpt-3.5-turbo',
+			model: 'gpt-4.1-mini',
 			temperature: 0.7,
 			dryRun: false,
 		};

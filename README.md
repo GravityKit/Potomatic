@@ -258,7 +258,7 @@ Using this example, "Block Editor" and other terms will not be translated to tar
 
 | Option                     | Short | Description                                                                           | Default         |
 | -------------------------- | ----- | ------------------------------------------------------------------------------------- | --------------- |
-| `--model <model>`          | `-m`  | AI model name (e.g., "gpt-4o-mini")                                                  | `gpt-4o-mini`   |
+| `--model <model>`          | `-m`  | AI model name (e.g., "gpt-4.1-mini")                                                 | `gpt-4.1-mini`  |
 | `--temperature <number>`   | -     | Creativity level (0.0-2.0); lower = more deterministic, higher = more creative        | `0.7`           |
 | `--max-tokens <number>`    | -     | Maximum completion tokens for AI responses (1-32768, auto-calculated if not set)      | Auto-calculated |
 | `--source-language <lang>` | `-s`  | Source language code (default: "en")                                                  | `en`            |

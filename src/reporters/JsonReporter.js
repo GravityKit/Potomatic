@@ -44,7 +44,7 @@ export class JsonReporter extends BaseReporter {
 				source_language: this.options.sourceLanguage || 'en',
 				dry_run: totals.isDryRun || false,
 				configuration: {
-					model: this.options.model || 'gpt-3.5-turbo',
+					model: this.options.model || 'gpt-4.1-mini',
 					batch_size: this.options.batchSize || 20,
 					max_retries: this.options.maxRetries || 3,
 					temperature: this.options.temperature || 0.1,

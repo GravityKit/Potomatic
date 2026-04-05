@@ -67,13 +67,13 @@ export class ProviderFactory {
 			{
 				name: 'openai',
 				displayName: 'OpenAI',
-				description: 'OpenAI GPT models (GPT-3.5, GPT-4, etc.)',
+				description: 'OpenAI GPT models (GPT-5, GPT-5.4, etc.)',
 				status: 'implemented',
-				models: ['gpt-3.5-turbo', 'gpt-4', 'gpt-4o', 'gpt-4o-mini'],
+				models: ['gpt-5-nano', 'gpt-5-mini', 'gpt-5', 'gpt-5.1', 'gpt-5.2', 'gpt-5.4-nano', 'gpt-5.4-mini', 'gpt-5.4', 'gpt-4.1-nano', 'gpt-4.1-mini', 'gpt-4.1'],
 				configExample: {
 					provider: 'openai',
 					apiKey: 'your-openai-api-key',
-					model: 'gpt-3.5-turbo',
+					model: 'gpt-4.1-mini',
 				},
 			},
 		];

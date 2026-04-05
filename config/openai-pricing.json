@@ -1,8 +1,28 @@
 {
-	"lastUpdated": "2025-01-12",
-	"source": "https://platform.openai.com/docs/pricing?latest-pricing=standard",
+	"lastUpdated": "2026-04-05",
+	"source": "https://platform.openai.com/docs/pricing",
 	"note": "Prices are per 1,000 tokens in USD. Standard tier pricing.",
 	"models": {
+		"gpt-5.4": {
+			"prompt": 0.0025,
+			"completion": 0.015
+		},
+		"gpt-5.4-mini": {
+			"prompt": 0.00075,
+			"completion": 0.0045
+		},
+		"gpt-5.4-nano": {
+			"prompt": 0.0002,
+			"completion": 0.00125
+		},
+		"gpt-5.2": {
+			"prompt": 0.00175,
+			"completion": 0.014
+		},
+		"gpt-5.1": {
+			"prompt": 0.00125,
+			"completion": 0.01
+		},
 		"gpt-5": {
 			"prompt": 0.00125,
 			"completion": 0.01
@@ -14,10 +34,6 @@
 		"gpt-5-nano": {
 			"prompt": 0.00005,
 			"completion": 0.0004
-		},
-		"gpt-5-pro": {
-			"prompt": 0.015,
-			"completion": 0.12
 		},
 		"gpt-4.1": {
 			"prompt": 0.002,
@@ -31,74 +47,22 @@
 			"prompt": 0.0001,
 			"completion": 0.0004
 		},
-		"gpt-4o": {
-			"prompt": 0.0025,
-			"completion": 0.01
-		},
-		"gpt-4o-mini": {
-			"prompt": 0.00015,
-			"completion": 0.0006
-		},
-		"o1": {
-			"prompt": 0.015,
-			"completion": 0.06
-		},
-		"o1-pro": {
-			"prompt": 0.15,
-			"completion": 0.6
-		},
-		"o3-pro": {
-			"prompt": 0.02,
-			"completion": 0.08
+		"o4-mini": {
+			"prompt": 0.0011,
+			"completion": 0.0044
 		},
 		"o3": {
 			"prompt": 0.002,
 			"completion": 0.008
 		},
-		"o3-deep-research": {
-			"prompt": 0.01,
-			"completion": 0.04
-		},
-		"o4-mini": {
-			"prompt": 0.0011,
-			"completion": 0.0044
-		},
 		"o3-mini": {
 			"prompt": 0.0011,
 			"completion": 0.0044
-		},
-		"o1-mini": {
-			"prompt": 0.0011,
-			"completion": 0.0044
-		},
-		"gpt-4-turbo": {
-			"prompt": 0.01,
-			"completion": 0.03
-		},
-		"gpt-4": {
-			"prompt": 0.03,
-			"completion": 0.06
-		},
-		"gpt-4-32k": {
-			"prompt": 0.06,
-			"completion": 0.12
-		},
-		"gpt-3.5-turbo": {
-			"prompt": 0.0005,
-			"completion": 0.0015
-		},
-		"gpt-3.5-turbo-instruct": {
-			"prompt": 0.0015,
-			"completion": 0.002
-		},
-		"gpt-3.5-turbo-16k-0613": {
-			"prompt": 0.003,
-			"completion": 0.004
 		}
 	},
 	"fallback": {
-		"prompt": 0.00015,
-		"completion": 0.0006,
-		"note": "Used for unknown models, based on gpt-4o-mini"
+		"prompt": 0.0004,
+		"completion": 0.0016,
+		"note": "Used for unknown models, based on gpt-4.1-mini"
 	}
 }

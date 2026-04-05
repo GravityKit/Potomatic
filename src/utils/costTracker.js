@@ -23,7 +23,7 @@ const cachedPricingData = new Map();
 
 /**
  * Emergency fallback pricing data for when config files are missing.
- * Based on common OpenAI model pricing as of late 2024.
+ * Based on common OpenAI model pricing as of early 2026.
  *
  * @since 1.0.0
  *
@@ -32,12 +32,12 @@ const cachedPricingData = new Map();
 const EMERGENCY_FALLBACK = {
 	openai: {
 		models: {
-			'gpt-3.5-turbo': { prompt: 0.0005, completion: 0.0015 },
-			'gpt-4': { prompt: 0.03, completion: 0.06 },
-			'gpt-4o': { prompt: 0.0025, completion: 0.01 },
-			'gpt-4o-mini': { prompt: 0.00015, completion: 0.0006 },
+			'gpt-5-nano': { prompt: 0.00005, completion: 0.0004 },
+			'gpt-5-mini': { prompt: 0.00025, completion: 0.002 },
+			'gpt-5': { prompt: 0.00125, completion: 0.01 },
+			'gpt-5.4': { prompt: 0.0025, completion: 0.015 },
 		},
-		fallback: { prompt: 0.0005, completion: 0.0015 },
+		fallback: { prompt: 0.0004, completion: 0.0016 },
 	},
 };
 

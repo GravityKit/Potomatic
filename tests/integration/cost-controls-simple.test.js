@@ -20,7 +20,7 @@ describe('Cost Controls Integration (Simplified)', () => {
 
 		config = {
 			apiKey: 'test-api-key',
-			model: 'gpt-3.5-turbo',
+			model: 'gpt-4.1-mini',
 			temperature: 0.1,
 			timeout: 60,
 			batchSize: 5,
@@ -53,16 +53,16 @@ describe('Cost Controls Integration (Simplified)', () => {
 		it('should calculate costs correctly for different models', () => {
 			const usage = { prompt_tokens: 1000, completion_tokens: 500 };
 
-			const gpt35Cost = calculateCost(usage, 'openai', 'gpt-3.5-turbo');
-			expect(gpt35Cost.totalCost).toBeCloseTo(0.00125, 5);
+			const gpt41MiniCost = calculateCost(usage, 'openai', 'gpt-4.1-mini');
+			expect(gpt41MiniCost.totalCost).toBeCloseTo(0.0012, 5);
 
-			const gpt4oMiniCost = calculateCost(usage, 'openai', 'gpt-4o-mini');
-			expect(gpt4oMiniCost.totalCost).toBeCloseTo(0.00045, 5);
+			const gpt5NanoCost = calculateCost(usage, 'openai', 'gpt-5-nano');
+			expect(gpt5NanoCost.totalCost).toBeCloseTo(0.00025, 5);
 		});
 
 		it('should handle invalid usage data gracefully', () => {
 			const invalidUsage = null;
-			const cost = calculateCost(invalidUsage, 'openai', 'gpt-3.5-turbo');
+			const cost = calculateCost(invalidUsage, 'openai', 'gpt-4.1-mini');
 
 			expect(cost.promptCost).toBe(0);
 			expect(cost.completionCost).toBe(0);
@@ -78,8 +78,8 @@ describe('Cost Controls Integration (Simplified)', () => {
 			const usage1 = { prompt_tokens: 100, completion_tokens: 50 };
 			const usage2 = { prompt_tokens: 200, completion_tokens: 100 };
 
-			const cost1 = calculateCost(usage1, 'openai', 'gpt-3.5-turbo');
-			const cost2 = calculateCost(usage2, 'openai', 'gpt-3.5-turbo');
+			const cost1 = calculateCost(usage1, 'openai', 'gpt-4.1-mini');
+			const cost2 = calculateCost(usage2, 'openai', 'gpt-4.1-mini');
 
 			accumulator.addCost(cost1);
 			accumulator.addCost(cost2);
