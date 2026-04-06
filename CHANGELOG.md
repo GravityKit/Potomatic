@@ -1,11 +1,24 @@
 # Changelog
 
-
-## Develop
+## 1.2.0 — 2026-04-06
 
 ### Fixed
 
 * Output directory was not being created when saving .po files if it didn't exist.
+
+### Added
+
+* Post-translation validation that catches placeholder mismatches, non-breaking space issues, and plural form errors - blanking bad translations for automatic retry.
+* New `--extra-prompt-path` CLI flag to append domain-specific prompt content without replacing the base prompt.
+* Language-specific plural form guidance in the default prompt (Arabic 6-form, Russian 3-form, French 2-form, Japanese 1-form).
+* XML source elements now include a `placeholders` attribute listing expected placeholders for LLM verification.
+
+### Changed
+
+* Update OpenAI models and pricing to April 2026.
+* Default model changed from `gpt-4o-mini` to `gpt-4.1-mini`.
+* Hardened default prompt with explicit negative examples for placeholder preservation.
+* Blanked translation details now logged at warn level instead of debug.
 
 ## 1.1.0 — 2025-11-12
 

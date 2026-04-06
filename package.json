@@ -1,6 +1,6 @@
 {
 	"name": "potomatic",
-	"version": "1.1.0",
+	"version": "1.2.0",
 	"description": "AI-powered translation utility for translating .po(t) files into multiple languages",
 	"author": "GravityKit",
 	"keywords": [
@@ -27,6 +27,14 @@
 	},
 	"type": "module",
 	"main": "potomatic",
+	"files": [
+		"potomatic",
+		"src/",
+		"config/",
+		"CHANGELOG.md",
+		"LICENSE.md",
+		"README.md"
+	],
 	"bin": {
 		"potomatic": "potomatic"
 	},
