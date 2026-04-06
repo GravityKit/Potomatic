@@ -30,8 +30,10 @@ export function buildXmlPrompt(batch, targetLang, pluralCount, dictionaryMatches
 		prompt += '<!-- Dictionary Examples for Consistency -->\n';
 		dictionaryMatches.forEach((match, index) => {
 			const dictIndex = index + 1;
+			const ph = extractPlaceholders(match.source);
+			const phAttr = ph ? `placeholders="${escapeXmlAttribute(ph)}"` : 'placeholders="none"';
 
-			prompt += `<source i="${dictIndex}">${escapeXmlAttribute(match.source)}</source>\n`;
+			prompt += `<source i="${dictIndex}" ${phAttr}>${escapeXmlAttribute(match.source)}</source>\n`;
 		});
 		prompt += '<!-- End Dictionary Examples -->\n\n';
 		startIndex = dictionaryMatches.length + 1;
@@ -46,6 +48,15 @@ export function buildXmlPrompt(batch, targetLang, pluralCount, dictionaryMatches
 
 			if (entry.extractedComments) {
 				attrs.push(`c="${escapeXmlAttribute(entry.extractedComments)}"`);
+			}
+
+			// Include expected placeholders so the LLM can verify its output.
+			const ph = extractPlaceholders(entry.msgid);
+
+			if (ph) {
+				attrs.push(`placeholders="${escapeXmlAttribute(ph)}"`);
+			} else {
+				attrs.push('placeholders="none"');
 			}
 
 			// For plural forms, use separate <singular> and <plural> tags.
@@ -247,7 +258,8 @@ export function parseXmlResponse(xmlResponse, batch, pluralCount, logger, dictio
 					const formMatch = block.match(formRegex);
 
 					if (formMatch) {
-						const translation = decodeXmlEntities(formMatch[1]);
+						const source = i === 0 ? batch[batchIndex].msgid : (batch[batchIndex].msgid_plural || batch[batchIndex].msgid);
+						const translation = normalizeNbsp(decodeXmlEntities(formMatch[1]), source);
 
 						forms[i] = translation;
 					} else {
@@ -270,7 +282,7 @@ export function parseXmlResponse(xmlResponse, batch, pluralCount, logger, dictio
 				const contentMatch = block.match(/<t[^>]*>(.*?)<\/t>/s);
 
 				if (contentMatch) {
-					const translation = decodeXmlEntities(contentMatch[1]);
+					const translation = normalizeNbsp(decodeXmlEntities(contentMatch[1]), batch[batchIndex].msgid);
 
 					// If this entry expects plural forms, validate the result
 					if (batch[batchIndex].msgid_plural) {
@@ -295,6 +307,110 @@ export function parseXmlResponse(xmlResponse, batch, pluralCount, logger, dictio
 			}
 		});
 
+		// Post-process: reject translations where placeholders don't match the source.
+		for (let idx = 0; idx < result.length; idx++) {
+			const entry = batch[idx];
+			const singularPh = extractPlaceholders(entry.msgid);
+			const pluralPh = entry.msgid_plural ? extractPlaceholders(entry.msgid_plural) : singularPh;
+
+			for (let fi = 0; fi < result[idx].msgstr.length; fi++) {
+				const translation = result[idx].msgstr[fi];
+
+				if (!translation) {
+					continue;
+				}
+
+				// Form 0 validates against singular, forms 1+ against plural.
+				// For plural strings, form 0 (singular) may legitimately drop %d/%d
+				// when the language uses a word like "one" instead of the number.
+				const expectedPh = fi === 0 ? singularPh : pluralPh;
+				const transPlaceholders = extractPlaceholders(translation);
+
+				let isValid = expectedPh === transPlaceholders;
+
+				if (!isValid && entry.msgid_plural && pluralCount > 1) {
+					// Plural forms that represent specific small counts may
+					// legitimately drop %d and use words instead:
+					// - Form 0 (zero/singular): "no items" or "one item"
+					// - Form 1 (one/singular in 6-form languages): "مراجعة واحدة"
+					// - Form 2 (two/dual in 6-form languages): "مراجعتان"
+					// Not allowed when pluralCount === 1 (Japanese, Chinese, Korean)
+					// because form 0 is the ONLY form and must retain all placeholders.
+					const isSmallCountForm = fi === 0 || (pluralCount === 6 && fi <= 2);
+
+					if (isSmallCountForm) {
+						// Allow dropping only numeric placeholders (%d, %f, %u and
+						// positional variants). String placeholders (%s, %1$s) must
+						// always be retained — they carry non-count data.
+						// NOTE: pluralCount === 6 only matches Arabic in our current
+						// locale map. If a non-Arabic 6-form language is added, revisit.
+						// Uses frequency maps (not Sets) to preserve duplicate placeholder counts.
+						const expectedArr = (expectedPh || '').split(',').filter(Boolean);
+						const transArr = (transPlaceholders || '').split(',').filter(Boolean);
+
+						function buildFreqMap(arr) {
+							const freq = {};
+
+							for (const p of arr) {
+								freq[p] = (freq[p] || 0) + 1;
+							}
+
+							return freq;
+						}
+
+						const expectedFreq = buildFreqMap(expectedArr);
+						const transFreq = buildFreqMap(transArr);
+
+						// Find dropped placeholders (count-aware).
+						// A numeric placeholder can only be dropped entirely (all
+						// instances), not partially. "%d of %d" → dropping one %d
+						// but keeping the other breaks sprintf.
+						let allDropsValid = true;
+						let hasExtra = false;
+
+						for (const [ph, count] of Object.entries(expectedFreq)) {
+							const transCount = transFreq[ph] || 0;
+
+							if (transCount < count) {
+								const isNumeric = /^%(?:\d+\$)?[-+0 '#]*(?:\*|\d+)?(?:\.(?:\*|\d+))?[dfueEfFgGuxX]$/.test(ph);
+
+								if (!isNumeric || transCount !== 0) {
+									// Non-numeric dropped, or numeric partially dropped.
+									allDropsValid = false;
+								}
+							}
+						}
+
+						for (const [ph, count] of Object.entries(transFreq)) {
+							if (count > (expectedFreq[ph] || 0)) {
+								hasExtra = true;
+							}
+						}
+
+						isValid = allDropsValid && !hasExtra;
+					}
+				}
+
+				if (!isValid) {
+					if (verbosityLevel >= 1) {
+						logger.warn(
+							`Placeholder mismatch for "${entry.msgid.substring(0, 50)}..." [form ${fi}] — ` +
+							`expected [${expectedPh}], got [${transPlaceholders}]. Blanking translation.`,
+						);
+					}
+
+					result[idx].msgstr[fi] = '';
+					validationStats.stringsWithPluralIssues++;
+					validationStats.blankedStrings.push({
+						msgid: entry.msgid.substring(0, 100),
+						form: fi,
+						expected: expectedPh || 'none',
+						got: transPlaceholders || 'none',
+					});
+				}
+			}
+		}
+
 		return { translations: result, validationStats };
 	} catch (error) {
 		if (verbosityLevel >= 2) {
@@ -303,6 +419,27 @@ export function parseXmlResponse(xmlResponse, batch, pluralCount, logger, dictio
 
 		return { translations: result, validationStats };
 	}
+}
+
+/**
+ * Extracts sorted printf-style placeholders from a string.
+ *
+ * @since 1.1.0
+ *
+ * @param {string} text - Text to extract from.
+ *
+ * @return {string} Comma-separated sorted placeholders.
+ */
+function extractPlaceholders(text) {
+	if (!text) {
+		return '';
+	}
+
+	// Full PHP sprintf format: %[position$][flags][width][.precision]type
+	// First replace %% with a sentinel to avoid false matches, then extract.
+	const cleaned = text.replace(/%%/g, '\x00\x00');
+
+	return (cleaned.match(/%(?:\d+\$)?[-+0 '#]*(?:\*|\d+)?(?:\.(?:\*|\d+))?[bcdeEfFgGosuxX]/g) || []).sort().join(',');
 }
 
 /**
@@ -325,6 +462,44 @@ function decodeXmlEntities(text) {
 		.replace(/&quot;/g, '"')
 		.replace(/&apos;/g, "'")
 		.replace(/&amp;/g, '&');
+}
+
+/**
+ * Normalizes non-breaking spaces (U+00A0) in a translation to match the
+ * source string's whitespace. LLMs sometimes produce nbsp where the source
+ * has regular spaces, which triggers GlotPress "missing spaces" warnings.
+ *
+ * Only normalizes leading/trailing whitespace — interior nbsp is preserved
+ * as it may be intentional (e.g., French punctuation spacing).
+ *
+ * @since 1.1.0
+ *
+ * @param {string} translation - Translated text.
+ * @param {string} source      - Source text to match whitespace against.
+ *
+ * @return {string} Translation with leading/trailing nbsp normalized.
+ */
+function normalizeNbsp(translation, source) {
+	if (!translation || !translation.includes('\u00A0')) {
+		return translation;
+	}
+
+	let result = translation;
+
+	const origLeading = source.match(/^(\s*)/)[1];
+	const origTrailing = source.match(/(\s*)$/)[1];
+	const transLeading = result.match(/^(\s*)/)[1];
+	const transTrailing = result.match(/(\s*)$/)[1];
+
+	if (origLeading && transLeading.includes('\u00A0')) {
+		result = transLeading.replace(/\u00A0/g, ' ') + result.slice(transLeading.length);
+	}
+
+	if (origTrailing && transTrailing.includes('\u00A0')) {
+		result = result.slice(0, -transTrailing.length) + transTrailing.replace(/\u00A0/g, ' ');
+	}
+
+	return result;
 }
 
 /**

@@ -28,6 +28,9 @@ export function createEmptyValidationStats() {
 		stats[key] = 0;
 	}
 
+	// Track which specific strings were blanked due to placeholder mismatch.
+	stats.blankedStrings = [];
+
 	return stats;
 }
 
@@ -95,5 +98,13 @@ export function accumulateValidationStats(target, source) {
 
 	for (const key of Object.keys(VALIDATION_TYPES)) {
 		target[key] = (target[key] || 0) + (source[key] || 0);
+	}
+
+	if (source.blankedStrings && source.blankedStrings.length > 0) {
+		if (!target.blankedStrings) {
+			target.blankedStrings = [];
+		}
+
+		target.blankedStrings.push(...source.blankedStrings);
 	}
 }
