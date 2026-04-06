@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+// Suppress punycode deprecation warning from tiktoken/whatwg-url dependency.
+process.noDeprecation = true;
+
 /**
  * Potomatic
  *

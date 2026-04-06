@@ -58,8 +58,8 @@ describe('OpenAI Provider with Dictionary Integration', () => {
 		// Verify request content
 		const lastRequest = mockClient.getLastRequest();
 		expect(lastRequest.messages).toHaveLength(2); // System + user only
-		expect(lastRequest.messages[1].content).toContain('<source i="1">Hello</source>');
-		expect(lastRequest.messages[1].content).toContain('<source i="2">Goodbye</source>');
+		expect(lastRequest.messages[1].content).toContain('<source i="1" placeholders="none">Hello</source>');
+		expect(lastRequest.messages[1].content).toContain('<source i="2" placeholders="none">Goodbye</source>');
 	});
 
 	it('should include dictionary examples when matches found', async () => {
@@ -102,13 +102,13 @@ describe('OpenAI Provider with Dictionary Integration', () => {
 		// First user message should include dictionary examples
 		const promptMessage = lastRequest.messages[1].content;
 		expect(promptMessage).toContain('<!-- Dictionary Examples for Consistency -->');
-		expect(promptMessage).toContain('<source i="1">hello</source>');
-		expect(promptMessage).toContain('<source i="2">login</source>');
-		expect(promptMessage).toContain('<source i="3">dashboard</source>');
+		expect(promptMessage).toContain('<source i="1" placeholders="none">hello</source>');
+		expect(promptMessage).toContain('<source i="2" placeholders="none">login</source>');
+		expect(promptMessage).toContain('<source i="3" placeholders="none">dashboard</source>');
 
 		// And actual strings with offset indices
-		expect(promptMessage).toContain('<source i="4">Hello World</source>');
-		expect(promptMessage).toContain('<source i="5">Login to dashboard</source>');
+		expect(promptMessage).toContain('<source i="4" placeholders="none">Hello World</source>');
+		expect(promptMessage).toContain('<source i="5" placeholders="none">Login to dashboard</source>');
 	});
 
 	it('should handle dry run with dictionary cost calculation', async () => {
@@ -162,7 +162,7 @@ describe('OpenAI Provider with Dictionary Integration', () => {
 		// Should use the specific CA dictionary
 		const lastRequest = mockClient.getLastRequest();
 		const promptMessage = lastRequest.messages[1].content;
-		expect(promptMessage).toContain('<source i="1">login</source>');
+		expect(promptMessage).toContain('<source i="1" placeholders="none">login</source>');
 
 		const assistantMessage = lastRequest.messages[2].content;
 		expect(assistantMessage).toContain('Connexion (CA)');
@@ -220,7 +220,7 @@ describe('OpenAI Provider with Dictionary Integration', () => {
 		// Verify prompt includes dictionary and plural instructions
 		const lastRequest = mockClient.getLastRequest();
 		const promptMessage = lastRequest.messages[1].content;
-		expect(promptMessage).toContain('<source i="1">item</source>');
+		expect(promptMessage).toContain('<source i="1" placeholders="none">item</source>');
 		expect(promptMessage).toContain('<singular>One item</singular>');
 		expect(promptMessage).toContain('<plural>%d items</plural>');
 		expect(promptMessage).toContain('For entries with <singular> and <plural> tags, provide 2 translations');

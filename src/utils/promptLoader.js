@@ -48,14 +48,30 @@ function loadPromptTemplate(promptFilePath) {
  *
  * @return {string} Complete system prompt ready for use.
  */
-export function buildSystemPrompt(targetLang, sourceLang = 'English', promptFilePath = null) {
-	if (!promptFilePath) {
-		const currentDir = path.dirname(fileURLToPath(import.meta.url));
+export function buildSystemPrompt(targetLang, sourceLang = 'English', promptFilePath = null, extraPromptPath = null) {
+	const currentDir = path.dirname(fileURLToPath(import.meta.url));
+	const defaultPromptPath = path.resolve(currentDir, '../../config/prompt.md');
 
-		promptFilePath = path.resolve(currentDir, '../../config/prompt.md');
+	// --prompt-file-path fully overrides the default prompt.
+	// --extra-prompt-path appends to the default prompt (for domain-specific terminology).
+	let template;
+
+	if (promptFilePath) {
+		template = loadPromptTemplate(promptFilePath);
+	} else {
+		template = loadPromptTemplate(defaultPromptPath);
 	}
 
-	const template = loadPromptTemplate(promptFilePath);
+	if (extraPromptPath) {
+		if (!fs.existsSync(extraPromptPath)) {
+			throw new Error(`Extra prompt file not found: ${extraPromptPath}`);
+		}
+
+		const extraTemplate = loadPromptTemplate(extraPromptPath);
+
+		template = template + '\n\n' + extraTemplate;
+	}
+
 	const targetLanguageName = getApiTargetLanguage(targetLang);
 	const sourceLanguageName = getApiTargetLanguage(sourceLang);
 	const pluralFormsString = getPluralForms(targetLang, { debug: () => {}, warn: () => {} });

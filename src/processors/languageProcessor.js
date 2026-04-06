@@ -497,10 +497,20 @@ export class LanguageProcessor {
 		this.logger.debug(`Total validation issues: ${totalValidationIssues}`, JSON.stringify(accumulatedValidationStats));
 		this.logger.debug(`Verbose level: ${this.config.verboseLevel || 1}`);
 
-		if (totalValidationIssues > 0 && (this.config.verboseLevel || 1) >= 2) {
+		if (totalValidationIssues > 0) {
 			const breakdown = formatValidationBreakdown(accumulatedValidationStats);
 
 			this.logger.warn(`Validation: ${breakdown}`);
+
+			const blanked = accumulatedValidationStats.blankedStrings || [];
+
+			if (blanked.length > 0) {
+				this.logger.warn(`Blanked ${blanked.length} translation(s) due to placeholder mismatch:`);
+
+				for (const b of blanked) {
+					this.logger.warn(`  "${b.msgid}" [form ${b.form}]: expected [${b.expected}], got [${b.got}]`);
+				}
+			}
 		}
 
 		return {
@@ -612,7 +622,7 @@ export class LanguageProcessor {
 	async _processDryRunBatch(batch, batchNumber, totalBatches, language) {
 		this.logger.info(`[Batch ${batchNumber}/${totalBatches}] DRY RUN: Analyzing ${formatNumber(batch.length || 0)} strings for translation`);
 
-		const systemPrompt = buildSystemPrompt(language, this.config.sourceLanguage, this.config.promptFilePath);
+		const systemPrompt = buildSystemPrompt(language, this.config.sourceLanguage, this.config.promptFilePath, this.config.extraPromptPath);
 		const costData = this._calculateDryRunCosts(batch, systemPrompt, language);
 
 		// Log dictionary usage if enabled.
@@ -894,7 +904,7 @@ export class LanguageProcessor {
 	 * @return {number} Estimated cost for the batch.
 	 */
 	_estimateBatchCost(batch, language) {
-		const systemPrompt = buildSystemPrompt(language, this.config.sourceLanguage, this.config.promptFilePath);
+		const systemPrompt = buildSystemPrompt(language, this.config.sourceLanguage, this.config.promptFilePath, this.config.extraPromptPath);
 		const costData = this._calculateDryRunCosts(batch, systemPrompt, language);
 
 		return costData.estimatedCost;
@@ -1069,7 +1079,7 @@ export class LanguageProcessor {
 	 * @return {Promise<Object>} Object containing batch result and translated items.
 	 */
 	async _processActualBatch(batch, language, batchNumber, totalBatches, progressCallback, processedStringsCount, totalStringsToTranslate, processStartTime) {
-		const systemPrompt = buildSystemPrompt(language, this.config.sourceLanguage, this.config.promptFilePath);
+		const systemPrompt = buildSystemPrompt(language, this.config.sourceLanguage, this.config.promptFilePath, this.config.extraPromptPath);
 
 		// Calculate plural count for target language.
 		const pluralFormsString = getPluralForms(language, this.logger);

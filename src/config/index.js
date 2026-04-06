@@ -295,6 +295,7 @@ export function parseCliArguments() {
 
 		// === Configuration File Paths ===
 		.option('--prompt-file-path <path>', 'Path to the prompt.md file containing translation instructions (default: ./config/prompt.md)', DEFAULTS.PROMPT_FILE_PATH)
+		.option('--extra-prompt-path <path>', 'Path to an additional prompt file appended to the default prompt (e.g., domain-specific terminology)')
 		.option('--po-header-template-path <path>', 'Path to the po-header.json file containing custom PO file headers (default: ./config/po-header.json)', DEFAULTS.PO_HEADER_TEMPLATE_PATH)
 
 		// === Performance Options ===
@@ -470,6 +471,7 @@ export function createConfiguration(options) {
 		dictionaryPath: options.dictionaryPath || DEFAULTS.DICTIONARY_PATH,
 		useDictionary: options.useDictionary || DEFAULTS.USE_DICTIONARY,
 		promptFilePath: options.promptFilePath || DEFAULTS.PROMPT_FILE_PATH,
+		extraPromptPath: options.extraPromptPath || null,
 		poHeaderTemplatePath: options.poHeaderTemplatePath || DEFAULTS.PO_HEADER_TEMPLATE_PATH,
 	};
 }

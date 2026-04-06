@@ -18,8 +18,8 @@ describe('XML Translation with Dictionary', () => {
 			const result = buildXmlPrompt(batch, 'fr_FR', 1);
 
 			expect(result.xmlPrompt).toContain('Translate to French');
-			expect(result.xmlPrompt).toContain('<source i="1">Hello</source>');
-			expect(result.xmlPrompt).toContain('<source i="2">Goodbye</source>');
+			expect(result.xmlPrompt).toContain('<source i="1" placeholders="none">Hello</source>');
+			expect(result.xmlPrompt).toContain('<source i="2" placeholders="none">Goodbye</source>');
 			expect(result.dictionaryCount).toBe(0);
 			expect(result.metadata.hasDictionary).toBe(false);
 		});
@@ -36,13 +36,13 @@ describe('XML Translation with Dictionary', () => {
 
 			// Should contain dictionary section
 			expect(result.xmlPrompt).toContain('<!-- Dictionary Examples for Consistency -->');
-			expect(result.xmlPrompt).toContain('<source i="1">Hello</source>');
-			expect(result.xmlPrompt).toContain('<source i="2">Save</source>');
+			expect(result.xmlPrompt).toContain('<source i="1" placeholders="none">Hello</source>');
+			expect(result.xmlPrompt).toContain('<source i="2" placeholders="none">Save</source>');
 			expect(result.xmlPrompt).toContain('<!-- End Dictionary Examples -->');
 
 			// Should contain actual strings starting after dictionary
-			expect(result.xmlPrompt).toContain('<source i="3">Hello World</source>');
-			expect(result.xmlPrompt).toContain('<source i="4">Save changes</source>');
+			expect(result.xmlPrompt).toContain('<source i="3" placeholders="none">Hello World</source>');
+			expect(result.xmlPrompt).toContain('<source i="4" placeholders="none">Save changes</source>');
 
 			expect(result.dictionaryCount).toBe(2);
 			expect(result.metadata.hasDictionary).toBe(true);
@@ -56,7 +56,7 @@ describe('XML Translation with Dictionary', () => {
 
 			const result = buildXmlPrompt(batch, 'fr_FR', 2, dictionaryMatches);
 
-			expect(result.xmlPrompt).toContain('<source i="1">item</source>');
+			expect(result.xmlPrompt).toContain('<source i="1" placeholders="none">item</source>');
 			expect(result.xmlPrompt).toContain('<singular>One item</singular>');
 			expect(result.xmlPrompt).toContain('<plural>%d items</plural>');
 			expect(result.xmlPrompt).toContain('For entries with <singular> and <plural> tags, provide 2 translations');
@@ -216,8 +216,8 @@ describe('XML Translation with Dictionary', () => {
 			const promptResult = buildXmlPrompt(batch, 'fr_FR', 1, dictionaryMatches);
 
 			expect(promptResult.dictionaryCount).toBe(2);
-			expect(promptResult.xmlPrompt).toContain('<source i="1">Login</source>');
-			expect(promptResult.xmlPrompt).toContain('<source i="3">Login to dashboard</source>');
+			expect(promptResult.xmlPrompt).toContain('<source i="1" placeholders="none">Login</source>');
+			expect(promptResult.xmlPrompt).toContain('<source i="3" placeholders="none">Login to dashboard</source>');
 
 			// 2. Build expected dictionary response
 			const dictResponse = buildDictionaryResponse(dictionaryMatches);
