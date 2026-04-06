@@ -424,7 +424,7 @@ export function parseXmlResponse(xmlResponse, batch, pluralCount, logger, dictio
 /**
  * Extracts sorted printf-style placeholders from a string.
  *
- * @since 1.1.0
+ * @since 1.2.0
  *
  * @param {string} text - Text to extract from.
  *
@@ -472,7 +472,7 @@ function decodeXmlEntities(text) {
  * Only normalizes leading/trailing whitespace — interior nbsp is preserved
  * as it may be intentional (e.g., French punctuation spacing).
  *
- * @since 1.1.0
+ * @since 1.2.0
  *
  * @param {string} translation - Translated text.
  * @param {string} source      - Source text to match whitespace against.
