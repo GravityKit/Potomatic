@@ -27,6 +27,14 @@
 	},
 	"type": "module",
 	"main": "potomatic",
+	"files": [
+		"potomatic",
+		"src/",
+		"config/",
+		"CHANGELOG.md",
+		"LICENSE.md",
+		"README.md"
+	],
 	"bin": {
 		"potomatic": "potomatic"
 	},

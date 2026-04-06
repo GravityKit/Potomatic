@@ -426,7 +426,7 @@ You can override the default path using the `--po-header-template-path` CLI opti
 
 ### `config/openai-pricing.json`
 
-Contains pricing information for OpenAI models (as of May 2025) used for cost estimation. This file is automatically loaded and used to calculate translation costs.
+Contains pricing information for OpenAI models (as of April 2026) used for cost estimation. This file is automatically loaded and used to calculate translation costs.
 
 ---
 
