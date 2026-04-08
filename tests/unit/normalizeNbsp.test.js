@@ -146,17 +146,15 @@ describe('normalizeNbsp', () => {
 
 	describe('plural forms', () => {
 		it('should normalize nbsp in plural form translations', () => {
-			const batch = [{
-				msgid: '%d entry found.                    ',
-				msgid_plural: '%d entries found.                    ',
-			}];
+			const batch = [
+				{
+					msgid: '%d entry found.                    ',
+					msgid_plural: '%d entries found.                    ',
+				},
+			];
 
 			const trailing = '\u00A0'.repeat(20);
-			const forms = [
-				`%d запись найдена.${trailing}`,
-				`%d записи найдены.${trailing}`,
-				`%d записей найдено.${trailing}`,
-			];
+			const forms = [`%d запись найдена.${trailing}`, `%d записи найдены.${trailing}`, `%d записей найдено.${trailing}`];
 
 			const { translations } = parseXmlResponse(xml([forms]), batch, 3, mockLogger);
 

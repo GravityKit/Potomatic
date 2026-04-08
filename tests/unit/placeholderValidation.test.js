@@ -180,20 +180,14 @@ describe('placeholder validation', () => {
 	describe('correct placeholders (should pass)', () => {
 		it('should keep translation with identical placeholders', () => {
 			const batch = [{ msgid: 'Hello %s, you have %d items' }];
-			const { translations } = parseXmlResponse(
-				xml(['Bonjour %s, vous avez %d articles']),
-				batch, 1, mockLogger,
-			);
+			const { translations } = parseXmlResponse(xml(['Bonjour %s, vous avez %d articles']), batch, 1, mockLogger);
 
 			expect(translations[0].msgstr[0]).toBe('Bonjour %s, vous avez %d articles');
 		});
 
 		it('should keep translation with positional placeholders in different order', () => {
 			const batch = [{ msgid: '%1$s has %2$d entries in %3$s' }];
-			const { translations } = parseXmlResponse(
-				xml(['В %3$s у %1$s есть %2$d записей']),
-				batch, 1, mockLogger,
-			);
+			const { translations } = parseXmlResponse(xml(['В %3$s у %1$s есть %2$d записей']), batch, 1, mockLogger);
 
 			expect(translations[0].msgstr[0]).toBe('В %3$s у %1$s есть %2$d записей');
 		});
@@ -204,10 +198,7 @@ describe('placeholder validation', () => {
 			const { logger, warnings } = createSpyLogger();
 			const batch = [{ msgid: 'Hello %s' }];
 
-			const { translations } = parseXmlResponse(
-				xml(['Bonjour %s %s']),
-				batch, 1, logger,
-			);
+			const { translations } = parseXmlResponse(xml(['Bonjour %s %s']), batch, 1, logger);
 
 			expect(translations[0].msgstr[0]).toBe('');
 			expect(warnings.some((w) => w.includes('Placeholder mismatch'))).toBe(true);
@@ -217,10 +208,7 @@ describe('placeholder validation', () => {
 			const { logger, warnings } = createSpyLogger();
 			const batch = [{ msgid: 'Hello %s' }];
 
-			const { translations } = parseXmlResponse(
-				xml(['Bonjour %s (%d)']),
-				batch, 1, logger,
-			);
+			const { translations } = parseXmlResponse(xml(['Bonjour %s (%d)']), batch, 1, logger);
 
 			expect(translations[0].msgstr[0]).toBe('');
 			expect(warnings.some((w) => w.includes('Placeholder mismatch'))).toBe(true);
@@ -232,10 +220,7 @@ describe('placeholder validation', () => {
 			const { logger, warnings } = createSpyLogger();
 			const batch = [{ msgid: '%s has %d entries' }];
 
-			const { translations } = parseXmlResponse(
-				xml(['имеет %d записей']),
-				batch, 1, logger,
-			);
+			const { translations } = parseXmlResponse(xml(['имеет %d записей']), batch, 1, logger);
 
 			expect(translations[0].msgstr[0]).toBe('');
 			expect(warnings.some((w) => w.includes('Placeholder mismatch'))).toBe(true);
@@ -245,10 +230,7 @@ describe('placeholder validation', () => {
 			const { logger, warnings } = createSpyLogger();
 			const batch = [{ msgid: 'View %1$s by %2$s' }];
 
-			const { translations } = parseXmlResponse(
-				xml(['Просмотреть запись автора']),
-				batch, 1, logger,
-			);
+			const { translations } = parseXmlResponse(xml(['Просмотреть запись автора']), batch, 1, logger);
 
 			expect(translations[0].msgstr[0]).toBe('');
 			expect(warnings.some((w) => w.includes('Placeholder mismatch'))).toBe(true);
@@ -260,10 +242,7 @@ describe('placeholder validation', () => {
 			const { logger, warnings } = createSpyLogger();
 			const batch = [{ msgid: 'Hello world' }];
 
-			const { translations } = parseXmlResponse(
-				xml(['Bonjour %s monde']),
-				batch, 1, logger,
-			);
+			const { translations } = parseXmlResponse(xml(['Bonjour %s monde']), batch, 1, logger);
 
 			expect(translations[0].msgstr[0]).toBe('');
 			expect(warnings.some((w) => w.includes('Placeholder mismatch'))).toBe(true);
@@ -273,10 +252,7 @@ describe('placeholder validation', () => {
 			const { logger, warnings } = createSpyLogger();
 			const batch = [{ msgid: 'Settings' }];
 
-			const { translations } = parseXmlResponse(
-				xml(['Настройки %d']),
-				batch, 1, logger,
-			);
+			const { translations } = parseXmlResponse(xml(['Настройки %d']), batch, 1, logger);
 
 			expect(translations[0].msgstr[0]).toBe('');
 			expect(warnings.some((w) => w.includes('Placeholder mismatch'))).toBe(true);
@@ -291,10 +267,7 @@ describe('placeholder validation', () => {
 			const { logger, warnings } = createSpyLogger();
 			const batch = [{ msgid: 'Hello %s' }];
 
-			const { translations } = parseXmlResponse(
-				xml(['Bonjour \uFF05s']),
-				batch, 1, logger,
-			);
+			const { translations } = parseXmlResponse(xml(['Bonjour \uFF05s']), batch, 1, logger);
 
 			expect(translations[0].msgstr[0]).toBe('');
 			expect(warnings.some((w) => w.includes('Placeholder mismatch'))).toBe(true);
@@ -304,10 +277,7 @@ describe('placeholder validation', () => {
 			const { logger, warnings } = createSpyLogger();
 			const batch = [{ msgid: '%1$s by %2$s' }];
 
-			const { translations } = parseXmlResponse(
-				xml(['\uFF051$s от \uFF052$s']),
-				batch, 1, logger,
-			);
+			const { translations } = parseXmlResponse(xml(['\uFF051$s от \uFF052$s']), batch, 1, logger);
 
 			expect(translations[0].msgstr[0]).toBe('');
 			expect(warnings.some((w) => w.includes('Placeholder mismatch'))).toBe(true);
@@ -316,16 +286,14 @@ describe('placeholder validation', () => {
 
 	describe('plural forms', () => {
 		it('should pass when all plural forms have correct placeholders from msgid_plural', () => {
-			const batch = [{
-				msgid: '%d entry found',
-				msgid_plural: '%d entries found',
-			}];
-
-			const forms = [
-				'%d запись найдена',
-				'%d записи найдены',
-				'%d записей найдено',
+			const batch = [
+				{
+					msgid: '%d entry found',
+					msgid_plural: '%d entries found',
+				},
 			];
+
+			const forms = ['%d запись найдена', '%d записи найдены', '%d записей найдено'];
 
 			const { translations } = parseXmlResponse(xml([forms]), batch, 3, mockLogger);
 
@@ -338,13 +306,15 @@ describe('placeholder validation', () => {
 			// In Arabic, form 0 is the "zero" form; in Japanese, form 0 is the
 			// only form. For languages where singular form doesn't use a number,
 			// the placeholder may be absent.
-			const batch = [{
-				msgid: '%d entry',
-				msgid_plural: '%d entries',
-			}];
+			const batch = [
+				{
+					msgid: '%d entry',
+					msgid_plural: '%d entries',
+				},
+			];
 
 			const forms = [
-				'запись',   // Form 0: no %d (language says "one entry" without number).
+				'запись', // Form 0: no %d (language says "one entry" without number).
 				'%d записи',
 				'%d записей',
 			];
@@ -359,15 +329,14 @@ describe('placeholder validation', () => {
 
 		it('should pass when plural form 0 matches plural placeholders instead of singular', () => {
 			// Form 0 can also match the plural's placeholders.
-			const batch = [{
-				msgid: '%d item in %s',
-				msgid_plural: '%d items in %s',
-			}];
-
-			const forms = [
-				'%d элемент в %s',
-				'%d элемента в %s',
+			const batch = [
+				{
+					msgid: '%d item in %s',
+					msgid_plural: '%d items in %s',
+				},
 			];
+
+			const forms = ['%d элемент в %s', '%d элемента в %s'];
 
 			const { translations } = parseXmlResponse(xml([forms]), batch, 2, mockLogger);
 
@@ -377,41 +346,45 @@ describe('placeholder validation', () => {
 
 		it('should blank plural form 1+ when placeholder is missing', () => {
 			const { logger, warnings } = createSpyLogger();
-			const batch = [{
-				msgid: '%d entry',
-				msgid_plural: '%d entries',
-			}];
+			const batch = [
+				{
+					msgid: '%d entry',
+					msgid_plural: '%d entries',
+				},
+			];
 
 			const forms = [
 				'%d запись',
-				'записи',    // Form 1: missing %d.
+				'записи', // Form 1: missing %d.
 				'%d записей',
 			];
 
 			const { translations } = parseXmlResponse(xml([forms]), batch, 3, logger);
 
 			expect(translations[0].msgstr[0]).toBe('%d запись');
-			expect(translations[0].msgstr[1]).toBe('');  // Blanked.
+			expect(translations[0].msgstr[1]).toBe(''); // Blanked.
 			expect(translations[0].msgstr[2]).toBe('%d записей');
 			expect(warnings.some((w) => w.includes('form 1'))).toBe(true);
 		});
 
 		it('should blank plural form 0 when it has extra placeholders', () => {
-			const { logger, warnings } = createSpyLogger();
-			const batch = [{
-				msgid: '%d entry',
-				msgid_plural: '%d entries',
-			}];
+			const { logger } = createSpyLogger();
+			const batch = [
+				{
+					msgid: '%d entry',
+					msgid_plural: '%d entries',
+				},
+			];
 
 			const forms = [
-				'%d %s запись',  // Form 0: has extra %s.
+				'%d %s запись', // Form 0: has extra %s.
 				'%d записи',
 				'%d записей',
 			];
 
 			const { translations } = parseXmlResponse(xml([forms]), batch, 3, logger);
 
-			expect(translations[0].msgstr[0]).toBe('');  // Blanked.
+			expect(translations[0].msgstr[0]).toBe(''); // Blanked.
 			expect(translations[0].msgstr[1]).toBe('%d записи');
 			expect(translations[0].msgstr[2]).toBe('%d записей');
 		});
@@ -421,10 +394,7 @@ describe('placeholder validation', () => {
 		it('should increment stringsWithPluralIssues when placeholder mismatch occurs', () => {
 			const batch = [{ msgid: 'Hello %s' }];
 
-			const { validationStats } = parseXmlResponse(
-				xml(['Bonjour']),
-				batch, 1, mockLogger,
-			);
+			const { validationStats } = parseXmlResponse(xml(['Bonjour']), batch, 1, mockLogger);
 
 			expect(validationStats.stringsWithPluralIssues).toBeGreaterThan(0);
 		});
@@ -432,10 +402,7 @@ describe('placeholder validation', () => {
 		it('should not increment stats when placeholders match', () => {
 			const batch = [{ msgid: 'Hello %s' }];
 
-			const { validationStats } = parseXmlResponse(
-				xml(['Bonjour %s']),
-				batch, 1, mockLogger,
-			);
+			const { validationStats } = parseXmlResponse(xml(['Bonjour %s']), batch, 1, mockLogger);
 
 			expect(validationStats.stringsWithPluralIssues).toBe(0);
 		});
@@ -460,17 +427,11 @@ describe('placeholder validation', () => {
 		});
 
 		it('should handle multiple entries in a batch independently', () => {
-			const { logger, warnings } = createSpyLogger();
-			const batch = [
-				{ msgid: 'Hello %s' },
-				{ msgid: 'Count: %d' },
-			];
+			const { logger } = createSpyLogger();
+			const batch = [{ msgid: 'Hello %s' }, { msgid: 'Count: %d' }];
 
 			// First translation is correct, second is missing %d.
-			const { translations } = parseXmlResponse(
-				xml(['Bonjour %s', 'Счет:']),
-				batch, 1, logger,
-			);
+			const { translations } = parseXmlResponse(xml(['Bonjour %s', 'Счет:']), batch, 1, logger);
 
 			expect(translations[0].msgstr[0]).toBe('Bonjour %s');
 			expect(translations[1].msgstr[0]).toBe('');

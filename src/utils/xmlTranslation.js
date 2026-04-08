@@ -258,7 +258,7 @@ export function parseXmlResponse(xmlResponse, batch, pluralCount, logger, dictio
 					const formMatch = block.match(formRegex);
 
 					if (formMatch) {
-						const source = i === 0 ? batch[batchIndex].msgid : (batch[batchIndex].msgid_plural || batch[batchIndex].msgid);
+						const source = i === 0 ? batch[batchIndex].msgid : batch[batchIndex].msgid_plural || batch[batchIndex].msgid;
 						const translation = normalizeNbsp(decodeXmlEntities(formMatch[1]), source);
 
 						forms[i] = translation;
@@ -348,7 +348,7 @@ export function parseXmlResponse(xmlResponse, batch, pluralCount, logger, dictio
 						const expectedArr = (expectedPh || '').split(',').filter(Boolean);
 						const transArr = (transPlaceholders || '').split(',').filter(Boolean);
 
-						function buildFreqMap(arr) {
+						const buildFreqMap = (arr) => {
 							const freq = {};
 
 							for (const p of arr) {
@@ -356,7 +356,7 @@ export function parseXmlResponse(xmlResponse, batch, pluralCount, logger, dictio
 							}
 
 							return freq;
-						}
+						};
 
 						const expectedFreq = buildFreqMap(expectedArr);
 						const transFreq = buildFreqMap(transArr);
@@ -393,10 +393,7 @@ export function parseXmlResponse(xmlResponse, batch, pluralCount, logger, dictio
 
 				if (!isValid) {
 					if (verbosityLevel >= 1) {
-						logger.warn(
-							`Placeholder mismatch for "${entry.msgid.substring(0, 50)}..." [form ${fi}] — ` +
-							`expected [${expectedPh}], got [${transPlaceholders}]. Blanking translation.`,
-						);
+						logger.warn(`Placeholder mismatch for "${entry.msgid.substring(0, 50)}..." [form ${fi}] — ` + `expected [${expectedPh}], got [${transPlaceholders}]. Blanking translation.`);
 					}
 
 					result[idx].msgstr[fi] = '';
