@@ -75,11 +75,12 @@ export function buildXmlPrompt(batch, targetLang, pluralCount, dictionaryMatches
 	prompt += xmlTags + '\n\nRespond:\n';
 
 	if (hasPlurals) {
-		prompt += `For entries with <singular> and <plural> tags, provide ${pluralCount} translations:\n\n`;
-
 		const formTags = Array.from({ length: pluralCount }, (_, i) => `<f${i}>translation for form ${i}</f${i}>`).join('');
 
-		prompt += `Format: <t i="N">${formTags}</t>\n`;
+		prompt += `For entries with <singular> and <plural> tags, provide ${pluralCount} plural forms:\n`;
+		prompt += `Format: <t i="N">${formTags}</t>\n\n`;
+		prompt += `For all other entries (no <singular>/<plural>), provide a single translation:\n`;
+		prompt += `Format: <t i="N">translation</t>\n`;
 	} else {
 		prompt += `Format: <t i="N">translation</t>\n`;
 	}
@@ -200,7 +201,7 @@ function validatePluralForms(forms, originalMsgid, expectedCount, itemId, logger
 export function parseXmlResponse(xmlResponse, batch, pluralCount, logger, dictionaryCount = 0, verbosityLevel = 1) {
 	const result = batch.map((entry) => ({
 		msgid: entry.msgid,
-		msgstr: Array(pluralCount).fill(''),
+		msgstr: Array(entry.msgid_plural ? pluralCount : 1).fill(''),
 	}));
 
 	const validationStats = createEmptyValidationStats();
@@ -249,8 +250,9 @@ export function parseXmlResponse(xmlResponse, batch, pluralCount, logger, dictio
 			}
 
 			const hasFormTags = block.includes('<f0>');
+			const isSingularEntry = !batch[batchIndex].msgid_plural;
 
-			if (hasFormTags) {
+			if (hasFormTags && !isSingularEntry) {
 				const forms = [];
 
 				for (let i = 0; i < pluralCount; i++) {
@@ -278,6 +280,17 @@ export function parseXmlResponse(xmlResponse, batch, pluralCount, logger, dictio
 				}
 
 				result[batchIndex].msgstr = correctedForms;
+			} else if (hasFormTags && isSingularEntry) {
+				// AI incorrectly returned plural forms for a singular entry.
+				// Extract only form 0 and discard the rest.
+				const formRegex = /<f0>(.*?)<\/f0>/s;
+				const formMatch = block.match(formRegex);
+
+				if (formMatch) {
+					const translation = normalizeNbsp(decodeXmlEntities(formMatch[1]), batch[batchIndex].msgid);
+
+					result[batchIndex].msgstr = [translation];
+				}
 			} else {
 				const contentMatch = block.match(/<t[^>]*>(.*?)<\/t>/s);
 

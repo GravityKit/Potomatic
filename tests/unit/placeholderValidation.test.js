@@ -539,4 +539,36 @@ describe('placeholder validation', () => {
 			expect(translations[0].msgstr[0]).toBe('لا عناصر');
 		});
 	});
+
+	describe('singular entries with form tags', () => {
+		it('should extract only f0 when AI returns plural forms for a singular entry', () => {
+			// AI incorrectly returns <f0>...<f5> for a singular string like "30 files".
+			const batch = [{ msgid: '30 files' }];
+			const forms = ['30 ملفًا', '30 ملف', '30 ملفان', '%d ملفات', '%d ملفًا', '%d ملف'];
+			const { translations } = parseXmlResponse(xml([forms]), batch, 6, mockLogger);
+
+			expect(translations[0].msgstr).toHaveLength(1);
+			expect(translations[0].msgstr[0]).toBe('30 ملفًا');
+		});
+
+		it('should initialize singular entries with 1 msgstr slot', () => {
+			const batch = [{ msgid: 'Hello' }, { msgid: 'One item', msgid_plural: '%d items' }];
+			const { translations } = parseXmlResponse('', batch, 6, mockLogger);
+
+			expect(translations[0].msgstr).toHaveLength(1);
+			expect(translations[1].msgstr).toHaveLength(6);
+		});
+
+		it('should not trigger placeholder warnings for discarded plural forms', () => {
+			const { logger, warnings } = createSpyLogger();
+			const batch = [{ msgid: '30 files' }];
+			// AI adds %d in forms 3-5 — these should be discarded, not warned about.
+			const forms = ['30 ملفًا', '30 ملف', '30 ملفان', '%d ملفات', '%d ملفًا', '%d ملف'];
+			parseXmlResponse(xml([forms]), batch, 6, logger);
+
+			const placeholderWarnings = warnings.filter((w) => w.includes('Placeholder mismatch'));
+
+			expect(placeholderWarnings).toHaveLength(0);
+		});
+	});
 });

@@ -59,7 +59,7 @@ describe('XML Translation with Dictionary', () => {
 			expect(result.xmlPrompt).toContain('<source i="1" placeholders="none">item</source>');
 			expect(result.xmlPrompt).toContain('<singular>One item</singular>');
 			expect(result.xmlPrompt).toContain('<plural>%d items</plural>');
-			expect(result.xmlPrompt).toContain('For entries with <singular> and <plural> tags, provide 2 translations');
+			expect(result.xmlPrompt).toContain('For entries with <singular> and <plural> tags, provide 2 plural forms');
 		});
 
 		it('should escape XML in dictionary terms', () => {

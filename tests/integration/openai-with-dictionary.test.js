@@ -223,7 +223,7 @@ describe('OpenAI Provider with Dictionary Integration', () => {
 		expect(promptMessage).toContain('<source i="1" placeholders="none">item</source>');
 		expect(promptMessage).toContain('<singular>One item</singular>');
 		expect(promptMessage).toContain('<plural>%d items</plural>');
-		expect(promptMessage).toContain('For entries with <singular> and <plural> tags, provide 2 translations');
+		expect(promptMessage).toContain('For entries with <singular> and <plural> tags, provide 2 plural forms');
 	});
 
 	it('should handle API errors gracefully with dictionary', async () => {
