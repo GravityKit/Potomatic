@@ -986,6 +986,16 @@ export class TranslationOrchestrator {
 			return 1;
 		}
 
+		// A partially translated run leaves untranslated strings in the .po file. Reporting
+		// that as success hides the gap from anyone running this unattended.
+		if (totalFailed > 0) {
+			if (!(this.config.outputFormat === 'json' && !this.config.outputFile)) {
+				this.mainLogger.warn(`Processing completed with ${formatCount(totalFailed, 'string')} left untranslated.`);
+			}
+
+			return 1;
+		}
+
 		// If all languages were cost-limited, consider it successful completion.
 		if (totalTranslated === 0 && totalFailed === 0 && allLanguagesCostLimited) {
 			if (!(this.config.outputFormat === 'json' && !this.config.outputFile)) {
