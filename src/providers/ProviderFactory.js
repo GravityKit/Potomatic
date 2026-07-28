@@ -1,4 +1,5 @@
 import { OpenAIProvider } from './openai/OpenAIProvider.js';
+import { KNOWN_MODELS } from './openai/modelCapabilities.js';
 
 /**
  * Creates and configures AI translation providers based on configuration.
@@ -67,13 +68,13 @@ export class ProviderFactory {
 			{
 				name: 'openai',
 				displayName: 'OpenAI',
-				description: 'OpenAI GPT models (GPT-5, GPT-5.4, etc.)',
+				description: 'OpenAI GPT models (GPT-5.6, GPT-5.4, GPT-4.1, etc.)',
 				status: 'implemented',
-				models: ['gpt-5-nano', 'gpt-5-mini', 'gpt-5', 'gpt-5.1', 'gpt-5.2', 'gpt-5.4-nano', 'gpt-5.4-mini', 'gpt-5.4', 'gpt-4.1-nano', 'gpt-4.1-mini', 'gpt-4.1'],
+				models: [...KNOWN_MODELS].sort(),
 				configExample: {
 					provider: 'openai',
 					apiKey: 'your-openai-api-key',
-					model: 'gpt-4.1-mini',
+					model: 'gpt-5.4-mini',
 				},
 			},
 		];

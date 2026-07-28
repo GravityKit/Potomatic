@@ -1,8 +1,24 @@
 {
-	"lastUpdated": "2026-04-05",
+	"lastUpdated": "2026-07-28",
 	"source": "https://platform.openai.com/docs/pricing",
-	"note": "Prices are per 1,000 tokens in USD. Standard tier pricing.",
+	"note": "Prices are per 1,000 tokens in USD. Standard tier, short context. These model keys also define which models the OpenAI provider accepts, so only chat-completions-capable models belong here.",
 	"models": {
+		"gpt-5.6-sol": {
+			"prompt": 0.005,
+			"completion": 0.03
+		},
+		"gpt-5.6-terra": {
+			"prompt": 0.0025,
+			"completion": 0.015
+		},
+		"gpt-5.6-luna": {
+			"prompt": 0.001,
+			"completion": 0.006
+		},
+		"gpt-5.5": {
+			"prompt": 0.005,
+			"completion": 0.03
+		},
 		"gpt-5.4": {
 			"prompt": 0.0025,
 			"completion": 0.015
@@ -61,8 +77,8 @@
 		}
 	},
 	"fallback": {
-		"prompt": 0.0004,
-		"completion": 0.0016,
-		"note": "Used for unknown models, based on gpt-4.1-mini"
+		"prompt": 0.00075,
+		"completion": 0.0045,
+		"note": "Used for unknown models, based on gpt-5.4-mini"
 	}
 }

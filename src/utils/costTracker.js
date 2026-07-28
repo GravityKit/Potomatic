@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { FALLBACK_PRICING as OPENAI_FALLBACK_PRICING } from '../providers/openai/modelCapabilities.js';
 
 /**
  * Cost Tracking Utility.
@@ -23,7 +24,6 @@ const cachedPricingData = new Map();
 
 /**
  * Emergency fallback pricing data for when config files are missing.
- * Based on common OpenAI model pricing as of early 2026.
  *
  * @since 1.0.0
  *
@@ -31,13 +31,8 @@ const cachedPricingData = new Map();
  */
 const EMERGENCY_FALLBACK = {
 	openai: {
-		models: {
-			'gpt-5-nano': { prompt: 0.00005, completion: 0.0004 },
-			'gpt-5-mini': { prompt: 0.00025, completion: 0.002 },
-			'gpt-5': { prompt: 0.00125, completion: 0.01 },
-			'gpt-5.4': { prompt: 0.0025, completion: 0.015 },
-		},
-		fallback: { prompt: 0.0004, completion: 0.0016 },
+		models: OPENAI_FALLBACK_PRICING.models,
+		fallback: OPENAI_FALLBACK_PRICING.fallback,
 	},
 };
 

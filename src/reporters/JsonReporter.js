@@ -3,6 +3,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { createSummary, calculateAggregateTotals, formatNumber } from '../utils/costCalculations.js';
 import { VALIDATION_TYPES, getTotalValidationIssues } from '../utils/validationStats.js';
+import { DEFAULT_MODEL } from '../providers/openai/modelCapabilities.js';
 
 /**
  * Reports translation results in JSON format.
@@ -44,10 +45,10 @@ export class JsonReporter extends BaseReporter {
 				source_language: this.options.sourceLanguage || 'en',
 				dry_run: totals.isDryRun || false,
 				configuration: {
-					model: this.options.model || 'gpt-4.1-mini',
+					model: this.options.model || DEFAULT_MODEL,
 					batch_size: this.options.batchSize || 20,
 					max_retries: this.options.maxRetries || 3,
-					temperature: this.options.temperature || 0.1,
+					temperature: this.options.temperature ?? 0.1,
 					provider: this.options.provider || 'openai',
 				},
 			},
