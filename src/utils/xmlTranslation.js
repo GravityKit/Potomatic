@@ -249,14 +249,16 @@ export function parseXmlResponse(xmlResponse, batch, pluralCount, logger, dictio
 				return;
 			}
 
-			const hasFormTags = block.includes('<f0>');
+			// Tolerate stray characters inside the tag (models occasionally emit `<f0">`);
+			// a strict match drops the whole entry to the singular branch and blanks every form.
+			const hasFormTags = /<f0(?=[\s">])[^>]*>/.test(block);
 			const isSingularEntry = !batch[batchIndex].msgid_plural;
 
 			if (hasFormTags && !isSingularEntry) {
 				const forms = [];
 
 				for (let i = 0; i < pluralCount; i++) {
-					const formRegex = new RegExp(`<f${i}>(.*?)</f${i}>`, 's');
+					const formRegex = new RegExp(`<f${i}(?=[\\s">])[^>]*>(.*?)</f${i}(?=[\\s">])[^>]*>`, 's');
 					const formMatch = block.match(formRegex);
 
 					if (formMatch) {
@@ -283,7 +285,7 @@ export function parseXmlResponse(xmlResponse, batch, pluralCount, logger, dictio
 			} else if (hasFormTags && isSingularEntry) {
 				// AI incorrectly returned plural forms for a singular entry.
 				// Extract only form 0 and discard the rest.
-				const formRegex = /<f0>(.*?)<\/f0>/s;
+				const formRegex = /<f0(?=[\s">])[^>]*>(.*?)<\/f0(?=[\s">])[^>]*>/s;
 				const formMatch = block.match(formRegex);
 
 				if (formMatch) {
