@@ -12,16 +12,18 @@ import { buildXmlPrompt, parseXmlResponse, buildDictionaryResponse } from '../sr
 import { getPluralForms, extractPluralCount } from '../src/utils/poFileUtils.js';
 import { formatNumber } from '../src/utils/costCalculations.js';
 import { loadDictionary, findDictionaryMatches } from '../src/utils/dictionaryUtils.js';
+import { DEFAULT_MODEL, supportsCustomTemperature } from '../src/providers/openai/modelCapabilities.js';
 
 const CURRENT_DIR = path.dirname(fileURLToPath(import.meta.url));
 
 // A/B Test Configuration
+// Override any of these with AB_MODEL_A, AB_MODEL_B, AB_TEMP_A, AB_TEMP_B, AB_LANG.
 const TEST_CONFIG = {
-	model_a: 'gpt-4o-mini',
-	model_b: 'gpt-3.5-turbo',
-	model_a_temperature: 0.7,
-	model_b_temperature: 0.1,
-	target_language: 'ru',
+	model_a: process.env.AB_MODEL_A || DEFAULT_MODEL,
+	model_b: process.env.AB_MODEL_B || 'gpt-4.1-mini',
+	model_a_temperature: process.env.AB_TEMP_A ? Number(process.env.AB_TEMP_A) : 0.7,
+	model_b_temperature: process.env.AB_TEMP_B ? Number(process.env.AB_TEMP_B) : 0.7,
+	target_language: process.env.AB_LANG || 'ru',
 };
 
 // Test data: 27 strings from a production .pot file that include variety: simple, complex, placeholders, format specifiers, long strings, contexts, plural forms, and dictionary terms
@@ -333,11 +335,14 @@ async function testTranslation(openai, testStrings, promptConfig, targetLang) {
 	const start = Date.now();
 
 	try {
-		const response = await openai.chat.completions.create({
-			model: promptConfig.model,
-			temperature: promptConfig.temperature,
-			messages: messages,
-		});
+		const request = { model: promptConfig.model, messages };
+
+		// Models outside the gpt-4.x and gpt-5.[124] families reject an explicit temperature.
+		if (supportsCustomTemperature(promptConfig.model)) {
+			request.temperature = promptConfig.temperature;
+		}
+
+		const response = await openai.chat.completions.create(request);
 
 		const elapsed = Date.now() - start;
 		const usage = response.usage;
@@ -350,8 +355,8 @@ async function testTranslation(openai, testStrings, promptConfig, targetLang) {
 		let translations;
 
 		try {
-			translations = parseXmlResponse(content, batch, pluralCount, mockLogger, xmlResult.dictionaryCount);
-			
+			({ translations } = parseXmlResponse(content, batch, pluralCount, mockLogger, xmlResult.dictionaryCount));
+
 			// Post-process to handle pipe-separated plural forms that weren't parsed as XML.
 			translations = translations.map((item) => {
 				if (item.msgstr && item.msgstr.length === 1 && item.msgstr[0].includes('|')) {

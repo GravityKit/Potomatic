@@ -56,8 +56,15 @@ describe('Cost Controls Integration (Simplified)', () => {
 			const gpt41MiniCost = calculateCost(usage, 'openai', 'gpt-4.1-mini');
 			expect(gpt41MiniCost.totalCost).toBeCloseTo(0.0012, 5);
 
-			const gpt5NanoCost = calculateCost(usage, 'openai', 'gpt-5-nano');
-			expect(gpt5NanoCost.totalCost).toBeCloseTo(0.00025, 5);
+			const gpt54NanoCost = calculateCost(usage, 'openai', 'gpt-5.4-nano');
+			expect(gpt54NanoCost.totalCost).toBeCloseTo(0.000825, 5);
+		});
+
+		it('should price an uncatalogued model at the fallback rate', () => {
+			const usage = { prompt_tokens: 1000, completion_tokens: 500 };
+			const cost = calculateCost(usage, 'openai', 'gpt-9-imaginary');
+
+			expect(cost.totalCost).toBeCloseTo(0.003, 5);
 		});
 
 		it('should handle invalid usage data gracefully', () => {

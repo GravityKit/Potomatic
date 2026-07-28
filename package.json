@@ -40,7 +40,6 @@
 	},
 	"scripts": {
 		"translate": "./potomatic",
-		"ab-prompt-test": "node tools/ab-prompt-test",
 		"test": "vitest run",
 		"test:watch": "vitest",
 		"test:coverage": "vitest run --coverage",
