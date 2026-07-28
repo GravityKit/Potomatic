@@ -285,8 +285,8 @@ export function parseCliArguments() {
 		.option('--locale-format <format>', 'Format to use for locale codes in file names: `wp_locale` (ru_RU), `iso_639_1` (ru), `iso_639_2` (rus), or `target_lang` (default)', DEFAULTS.LOCALE_FORMAT)
 
 		// === Translation Options ===
-		.option('--provider <provider>', 'AI provider (e.g., "openai", "gemini"). Auto-detected from API key if not specified.', DEFAULTS.PROVIDER)
-		.option('-k, --api-key <key>', 'Provider API key (overrides POTOMATIC_<PROVIDER>_API_KEY and POTOMATIC_API_KEY env vars)')
+		.addOption(new Option('--provider <provider>', 'AI provider.').default(DEFAULTS.PROVIDER).hideHelp())
+		.option('-k, --api-key <key>', 'OpenAI API key (overrides POTOMATIC_OPENAI_API_KEY, OPENAI_API_KEY and POTOMATIC_API_KEY env vars)')
 		.option('-m, --model <model>', 'AI model name (e.g., "gpt-5.4-mini")', DEFAULTS.MODEL)
 		.option('--allow-unknown-model', 'Accept a model that is not in the pricing catalogue, costed at the fallback rate', DEFAULTS.ALLOW_UNKNOWN_MODEL)
 		.option('--temperature <number>', 'Creativity level (0.0-2.0); lower = more deterministic, higher = more creative', (val) => Math.max(0, Math.min(2, parseFloat(val))), DEFAULTS.TEMPERATURE)

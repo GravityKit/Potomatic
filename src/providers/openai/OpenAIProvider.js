@@ -426,9 +426,7 @@ export class OpenAIProvider extends Provider {
 				// Handle test mode failure simulation.
 				this._handleTestModeFailures(attempt, maxRetries);
 
-				const response = await this.client.chat.completions.create(
-					buildRequestParams(model, messages, this._calculateMaxTokens(model, batch.length), this.config.temperature ?? 0.1)
-				);
+				const response = await this.client.chat.completions.create(buildRequestParams(model, messages, this._calculateMaxTokens(model, batch.length), this.config.temperature ?? 0.1));
 
 				// Debug: Log raw AI response at verbose level.3.
 				this.logger.debug('=== RAW AI RESPONSE ===');

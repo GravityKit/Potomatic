@@ -124,12 +124,8 @@ npm run translate
 ## Quick Usage
 
 ```bash
-# Translate French and Spanish using defaults (provider auto-detected from OPENAI_API_KEY)
+# Translate French and Spanish using defaults
 ./potomatic -l fr_FR,es_ES -p translations.pot -k $OPENAI_API_KEY
-
-# Use Gemini (provider auto-detected from GEMINI_API_KEY)
-export GEMINI_API_KEY=your-gemini-key
-./potomatic -l fr_FR,es_ES -p translations.pot
 
 # Preview only (no API calls, cost estimate shown)
 ./potomatic --dry-run -l fr_FR -p translations.pot
@@ -244,23 +240,27 @@ Using this example, "Block Editor" and other terms will not be translated to tar
 | -------------------------------- | ----- | --------------------------------------------------------------- | ------- |
 | `--target-languages <languages>` | `-l`  | Target language codes, comma-separated. **Accepts multiple formats**: WordPress locale (`fr_FR`, `es_ES`), ISO 639-1 (`fr`, `es`), ISO 639-2 (`fra`, `spa`), or language names (`French`, `Spanish`). See [supported languages](#supported-languages) below. | -       |
 | `--pot-file-path <path>`         | `-p`  | Path to the input `.pot` file containing source strings         | -       |
-| `--api-key <key>`                | `-k`  | Provider API key (5-tier precedence: CLI > `POTOMATIC_<PROVIDER>_API_KEY` > `<PROVIDER>_API_KEY` > `POTOMATIC_API_KEY` > `API_KEY`) | -       |
+| `--api-key <key>`                | `-k`  | OpenAI API key (precedence: CLI > `POTOMATIC_OPENAI_API_KEY` > `OPENAI_API_KEY` > `POTOMATIC_API_KEY` > `API_KEY`) | -       |
 
-### Provider Settings
+### API Key
 
-| Option                | Short | Description                                                                                                                                           | Default  |
-| --------------------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| `--provider <name>`   | -     | AI provider (e.g., "openai", "gemini", "anthropic"). **Auto-detected from API key** if not specified (e.g., `GEMINI_API_KEY` → provider=gemini). | Auto-detected or `openai` |
+Potomatic translates through OpenAI. Set your key with `--api-key`, or in the environment:
 
-**Provider auto-detection precedence**: `--provider` flag > `PROVIDER` env var > auto-detected from key name > default (`openai`)
+| Variable                 | Notes                                            |
+| ------------------------ | ------------------------------------------------ |
+| `OPENAI_API_KEY`         | Standard key, shared with other tools             |
+| `POTOMATIC_OPENAI_API_KEY` | Use a different key for Potomatic than for everything else |
+
+`--api-key` takes precedence over both. A key is required unless you pass `--dry-run`.
 
 ### Model Settings
 
 | Option                     | Short | Description                                                                           | Default         |
 | -------------------------- | ----- | ------------------------------------------------------------------------------------- | --------------- |
-| `--model <model>`          | `-m`  | AI model name (e.g., "gpt-4.1-mini")                                                 | `gpt-4.1-mini`  |
-| `--temperature <number>`   | -     | Creativity level (0.0-2.0); lower = more deterministic, higher = more creative        | `0.7`           |
-| `--max-tokens <number>`    | -     | Maximum completion tokens for AI responses (1-32768, auto-calculated if not set)      | Auto-calculated |
+| `--model <model>`          | `-m`  | AI model name (e.g., "gpt-5.4-mini")                                                 | `gpt-5.4-mini`  |
+| `--temperature <number>`   | -     | Creativity level (0.0-2.0); ignored by models that accept only their default          | `0.7`           |
+| `--max-tokens <number>`    | -     | Completion-token limit (1-32768); reasoning models get extra headroom automatically | Auto-calculated |
+| `--allow-unknown-model`    | -     | Accept a model that is not in the pricing catalogue, costed at the fallback rate    | `false`         |
 | `--source-language <lang>` | `-s`  | Source language code (default: "en")                                                  | `en`            |
 
 ### File Output Settings
@@ -387,7 +387,7 @@ Used by default to locate [user dictionary](#-user-dictionaries) files. You can 
 
 ### `config/prompt.md`
 
-Contains the system prompt sent to the AI provider for translation. You may consider modifying it to adjust translation style or add domain-specific instructions.
+Contains the system prompt sent to the model for translation. You may consider modifying it to adjust translation style or add domain-specific instructions.
 
 You can override the default path using the `--prompt-file-path` CLI option or the `PROMPT_FILE_PATH` environment variable.
 
@@ -426,7 +426,7 @@ You can override the default path using the `--po-header-template-path` CLI opti
 
 ### `config/openai-pricing.json`
 
-Contains pricing information for OpenAI models (as of April 2026) used for cost estimation. This file is automatically loaded and used to calculate translation costs.
+Contains pricing information for OpenAI models (as of July 2026) used for cost estimation. This file is automatically loaded and used to calculate translation costs.
 
 ---
 

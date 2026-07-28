@@ -177,7 +177,10 @@ describe('catalog admission', () => {
 
 	it('still offers a usable model on every retained family', () => {
 		for (const family of ['gpt-4.1', 'gpt-5', 'gpt-5.1', 'gpt-5.2', 'gpt-5.4', 'gpt-5.5', 'gpt-5.6', 'o3', 'o4']) {
-			expect(KNOWN_MODELS.some((m) => m.startsWith(family)), family).toBe(true);
+			expect(
+				KNOWN_MODELS.some((m) => m.startsWith(family)),
+				family
+			).toBe(true);
 		}
 	});
 
