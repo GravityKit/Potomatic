@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
-import { encoding_for_model as encodingForModel } from 'tiktoken';
 import { Provider } from '../base/Provider.js';
+import { DEFAULT_MODEL, FALLBACK_PRICING, KNOWN_MODELS, REASONING_HEADROOM_TOKENS, TRUNCATED_ERROR_CODE, buildRequestParams, getEncodingForModel, supportsLegacyMaxTokens } from './modelCapabilities.js';
 import { buildXmlPrompt, parseXmlResponse, buildDictionaryResponse } from '../../utils/xmlTranslation.js';
 import { loadDictionary, findDictionaryMatches } from '../../utils/dictionaryUtils.js';
 
@@ -72,8 +72,8 @@ export class OpenAIProvider extends Provider {
 
 		const supportedModels = this.getSupportedModels();
 
-		if (config.model && !supportedModels.includes(config.model)) {
-			errors.push(`Unsupported model: ${config.model}. Supported: ${supportedModels.join(', ')}`);
+		if (config.model && !supportedModels.includes(config.model) && !config.allowUnknownModel) {
+			errors.push(`Unsupported model: ${config.model}. Supported: ${supportedModels.join(', ')}. Pass --allow-unknown-model to use it anyway.`);
 		}
 
 		if (config.temperature !== undefined && (config.temperature < 0 || config.temperature > 2)) {
@@ -213,19 +213,19 @@ export class OpenAIProvider extends Provider {
 	 *
 	 * @return {number} Token count.
 	 */
-	getTokenCount(text, model = 'gpt-4.1-mini') {
+	getTokenCount(text, model = DEFAULT_MODEL) {
 		if (!text || typeof text !== 'string') {
 			return 0;
 		}
 
+		const encoding = getEncodingForModel(model);
+
+		if (!encoding) {
+			return Math.ceil(text.length / 4);
+		}
+
 		try {
-			const encoding = encodingForModel(model);
-			const tokens = encoding.encode(text);
-			const tokenCount = tokens.length;
-
-			encoding.free();
-
-			return tokenCount;
+			return encoding.encode(text).length;
 		} catch (error) {
 			this.logger.warn(`Failed to get exact token count: ${error.message}`);
 
@@ -246,7 +246,7 @@ export class OpenAIProvider extends Provider {
 			return Object.keys(this.providerPricing.models).sort();
 		}
 
-		return ['gpt-5-nano', 'gpt-5-mini', 'gpt-5', 'gpt-5.1', 'gpt-5.2', 'gpt-5.4-nano', 'gpt-5.4-mini', 'gpt-5.4', 'gpt-4.1-nano', 'gpt-4.1-mini', 'gpt-4.1'];
+		return [...KNOWN_MODELS].sort();
 	}
 
 	/**
@@ -260,7 +260,7 @@ export class OpenAIProvider extends Provider {
 	 */
 	getModelPricing(model) {
 		if (!this.providerPricing) {
-			return { prompt: 0.0004, completion: 0.0016 };
+			return FALLBACK_PRICING.fallback;
 		}
 
 		return this.providerPricing.models[model] || this.providerPricing.fallback;
@@ -303,15 +303,7 @@ export class OpenAIProvider extends Provider {
 	 * @protected
 	 */
 	_getFallbackPricing() {
-		return {
-			models: {
-				'gpt-5-nano': { prompt: 0.00005, completion: 0.0004 },
-				'gpt-5-mini': { prompt: 0.00025, completion: 0.002 },
-				'gpt-5': { prompt: 0.00125, completion: 0.01 },
-				'gpt-5.4': { prompt: 0.0025, completion: 0.015 },
-			},
-			fallback: { prompt: 0.0004, completion: 0.0016 },
-		};
+		return FALLBACK_PRICING;
 	}
 
 	/**
@@ -404,6 +396,8 @@ export class OpenAIProvider extends Provider {
 	 */
 	async _makeApiCallWithRetries(messages, model, batch, maxRetries, retryDelayMs, retryProgressCallback = null, debugConfig = null, pluralCount = 1, dictionaryCount = 0) {
 		let lastError = null;
+		let attemptsMade = 0;
+		let failedUsage = null;
 
 		// Debug: Log complete conversation at verbose level.3.
 		this.logger.debug('=== FULL CONVERSATION WITH AI ===');
@@ -432,12 +426,9 @@ export class OpenAIProvider extends Provider {
 				// Handle test mode failure simulation.
 				this._handleTestModeFailures(attempt, maxRetries);
 
-				const response = await this.client.chat.completions.create({
-					model,
-					messages,
-					temperature: this.config.temperature || 0.1,
-					max_tokens: this._calculateMaxTokens(model, batch.length),
-				});
+				const response = await this.client.chat.completions.create(
+					buildRequestParams(model, messages, this._calculateMaxTokens(model, batch.length), this.config.temperature ?? 0.1)
+				);
 
 				// Debug: Log raw AI response at verbose level.3.
 				this.logger.debug('=== RAW AI RESPONSE ===');
@@ -447,6 +438,22 @@ export class OpenAIProvider extends Provider {
 				// Save debug files if enabled.
 				if (debugConfig && debugConfig.saveDebugInfo) {
 					await this._saveDebugFiles(messages, response, debugConfig, batch.length);
+				}
+
+				// A truncated response still yields whatever complete blocks arrived before the
+				// cut, so accepting it would write the rest out as blank msgstrs under a success
+				// status. Discard the partial batch instead. Reasoning models hit this easily,
+				// since their hidden reasoning is charged against the same completion budget.
+				if (response.choices[0].finish_reason === 'length') {
+					const reasoningTokens = response.usage?.completion_tokens_details?.reasoning_tokens || 0;
+					const reasoningNote = reasoningTokens > 0 ? ` (${reasoningTokens} of them spent on reasoning)` : '';
+
+					const truncationError = new Error(`Response truncated after ${response.usage?.completion_tokens || 0} completion tokens${reasoningNote}. Raise --max-tokens, lower --batch-size, or choose a different model.`);
+
+					truncationError.code = TRUNCATED_ERROR_CODE;
+					truncationError.usage = response.usage;
+
+					throw truncationError;
 				}
 
 				// Parse response.
@@ -481,6 +488,11 @@ export class OpenAIProvider extends Provider {
 				};
 			} catch (error) {
 				lastError = error;
+				attemptsMade = attempt + 1;
+
+				if (error.usage) {
+					failedUsage = error.usage;
+				}
 
 				this.logger.warn(`API call attempt ${attempt + 1} failed: ${error.message}`);
 
@@ -496,9 +508,9 @@ export class OpenAIProvider extends Provider {
 
 		return {
 			success: false,
-			error: `Failed after ${maxRetries + 1} attempts. Last error: ${lastError.message}`,
+			error: `Failed after ${attemptsMade} attempt${attemptsMade === 1 ? '' : 's'}. Last error: ${lastError.message}`,
 			translations: [],
-			cost: { totalCost: 0 },
+			cost: failedUsage ? this.calculateCost(failedUsage, model) : { totalCost: 0 },
 			dictionaryCount,
 		};
 	}
@@ -534,7 +546,8 @@ export class OpenAIProvider extends Provider {
 	 * @return {boolean} True if retrying should stop.
 	 */
 	_shouldStopRetrying(error) {
-		return error.status === 401 || error.status === 403;
+		// Truncation is deterministic: an identical retry costs money and fails the same way.
+		return error.status === 401 || error.status === 403 || error.code === TRUNCATED_ERROR_CODE;
 	}
 
 	/**
@@ -700,10 +713,7 @@ export class OpenAIProvider extends Provider {
 					model,
 				},
 				request: {
-					model,
-					messages,
-					temperature: this.config.temperature || 0.1,
-					max_tokens: this._calculateMaxTokens(model, batchSize),
+					...buildRequestParams(model, messages, this._calculateMaxTokens(model, batchSize), this.config.temperature ?? 0.1),
 					systemPromptLength: messages[0].content.length,
 					userMessageLength: messages[1].content.length,
 				},
@@ -758,12 +768,18 @@ export class OpenAIProvider extends Provider {
 		const safetyBuffer = 1.3;
 		const calculatedMaxTokens = Math.round(estimatedOutputTokens * safetyBuffer);
 
+		// Models on the `max_completion_tokens` path spend hidden reasoning tokens out of this
+		// same budget before emitting any text, and that cost is largely fixed rather than
+		// proportional to the batch. Sizing from visible output alone starves small batches.
+		// Raising the ceiling is free: billing follows the tokens actually generated.
+		const reasoningHeadroom = supportsLegacyMaxTokens(model) ? 0 : REASONING_HEADROOM_TOKENS;
+
 		// Apply reasonable bounds.
 		const minTokens = 100; // Minimum for any response.
-		const maxTokens = 32768; // OpenAI API limit.
-		const finalMaxTokens = Math.max(minTokens, Math.min(maxTokens, calculatedMaxTokens));
+		const maxTokens = 32768; // Potomatic cost/safety ceiling; keep aligned with config validation.
+		const finalMaxTokens = Math.max(minTokens, Math.min(maxTokens, calculatedMaxTokens + reasoningHeadroom));
 
-		this.logger.debug(`Auto-calculated max_tokens: ${finalMaxTokens} for batch of ${batchSize} string${batchSize === 1 ? '' : 's'} (estimated: ${estimatedOutputTokens}, with 30% buffer: ${calculatedMaxTokens})`);
+		this.logger.debug(`Auto-calculated max_tokens: ${finalMaxTokens} for batch of ${batchSize} string${batchSize === 1 ? '' : 's'} (estimated: ${estimatedOutputTokens}, with 30% buffer: ${calculatedMaxTokens}, reasoning headroom: ${reasoningHeadroom})`);
 
 		return finalMaxTokens;
 	}

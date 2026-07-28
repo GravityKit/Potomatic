@@ -3,6 +3,7 @@ import chalk from 'chalk';
 import { z } from 'zod';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
+import { DEFAULT_MODEL } from '../providers/openai/modelCapabilities.js';
 import { dirname, join } from 'path';
 import { normalizeLanguageInput } from '../utils/languageMapping.js';
 
@@ -58,7 +59,8 @@ const envSchema = z.object({
 	API_KEY: z.string().optional(),
 
 	// Model settings.
-	MODEL: z.string().default('gpt-4.1-mini'),
+	MODEL: z.string().default(DEFAULT_MODEL),
+	ALLOW_UNKNOWN_MODEL: booleanStringSchema(false),
 
 	// Performance settings.
 	BATCH_SIZE: z.coerce.number().int().min(1).max(100).default(20),
@@ -207,6 +209,7 @@ export const DEFAULTS = {
 	PROVIDER: RESOLVED_PROVIDER,
 	BATCH_SIZE: ENV_CONFIG.BATCH_SIZE,
 	MODEL: ENV_CONFIG.MODEL,
+	ALLOW_UNKNOWN_MODEL: ENV_CONFIG.ALLOW_UNKNOWN_MODEL,
 	VERBOSE_LEVEL: ENV_CONFIG.VERBOSE_LEVEL,
 	PO_FILE_PREFIX: ENV_CONFIG.PO_FILE_PREFIX,
 	INPUT_PO_PATH: ENV_CONFIG.INPUT_PO_PATH,
@@ -284,7 +287,8 @@ export function parseCliArguments() {
 		// === Translation Options ===
 		.option('--provider <provider>', 'AI provider (e.g., "openai", "gemini"). Auto-detected from API key if not specified.', DEFAULTS.PROVIDER)
 		.option('-k, --api-key <key>', 'Provider API key (overrides POTOMATIC_<PROVIDER>_API_KEY and POTOMATIC_API_KEY env vars)')
-		.option('-m, --model <model>', 'AI model name (e.g., "gpt-4.1-mini")', DEFAULTS.MODEL)
+		.option('-m, --model <model>', 'AI model name (e.g., "gpt-5.4-mini")', DEFAULTS.MODEL)
+		.option('--allow-unknown-model', 'Accept a model that is not in the pricing catalogue, costed at the fallback rate', DEFAULTS.ALLOW_UNKNOWN_MODEL)
 		.option('--temperature <number>', 'Creativity level (0.0-2.0); lower = more deterministic, higher = more creative', (val) => Math.max(0, Math.min(2, parseFloat(val))), DEFAULTS.TEMPERATURE)
 		.option('-F, --force-translate', 'Re-translate all strings, ignoring any existing translations', DEFAULTS.FORCE_TRANSLATE)
 		.option('--input-po-path <path>', 'Path to an existing `.po` file to use as a base for merging', DEFAULTS.INPUT_PO_PATH)
@@ -436,6 +440,7 @@ export function createConfiguration(options) {
 		provider,
 		apiKey,
 		model: options.model || DEFAULTS.MODEL,
+		allowUnknownModel: options.allowUnknownModel || DEFAULTS.ALLOW_UNKNOWN_MODEL,
 
 		potFilePath: options.potFilePath || DEFAULTS.POT_FILE_PATH,
 		targetLanguages: (options.targetLanguages || []).map((lang) => normalizeLanguageInput(lang)),
@@ -445,7 +450,7 @@ export function createConfiguration(options) {
 
 		batchSize: options.batchSize || DEFAULTS.BATCH_SIZE,
 		concurrentJobs: options.jobs || DEFAULTS.CONCURRENT_JOBS,
-		temperature: options.temperature || DEFAULTS.TEMPERATURE,
+		temperature: options.temperature ?? DEFAULTS.TEMPERATURE,
 		timeout: options.timeout || DEFAULTS.TIMEOUT,
 		maxTokens: options.maxTokens || DEFAULTS.MAX_TOKENS,
 
